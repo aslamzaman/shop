@@ -9,7 +9,6 @@ import { collection, getDocs } from 'firebase/firestore';
 
 
 export default function Home() {
-  const [users, setUsers] = useState([]);
   const [user, setUser] = useState("");
   const [pw, setPw] = useState("");
   const [msg, setMsg] = useState("");
@@ -18,40 +17,30 @@ export default function Home() {
 
 
 
-  useEffect(() => {
-    const load = async () => {
-      setMsg('Please wait...');
-      try {
-        const collectionRef = collection(db, 'user');
-        const querySnapshot = await getDocs(collectionRef);
-        const data = querySnapshot.docs.map(doc => {
-          return {
-            id: doc.id,
-            ...doc.data()
-          }
-        })
-      //  console.log(data);
-        setUsers(data);
-        setMsg('');
-      } catch (error) {
-        console.log(error);
-      }
-    }
-    load();
-  }, [])
 
-
-
-  const submitHandler = (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
-    const findUser = users.find(item => item.userName === user && item.password === pw);
-    if (findUser) {
-      sessionStorage.setItem('user', findUser.id);
-      router.push('/dashboard');
-     // console.log(findUser);
-    } else {
-      setMsg('User name or password not match!')
-      router.push('/');
+    setMsg("Please wait...");
+    try {
+      const collectionRef = collection(db, 'user');
+      const querySnapshot = await getDocs(collectionRef);
+      const data = querySnapshot.docs.map(doc => {
+        return {
+          id: doc.id,
+          ...doc.data()
+        }
+      })
+
+      const findUser = data.find(item => item.userName === user && item.password === pw);
+      if (findUser) {
+        sessionStorage.setItem('user', findUser.id);
+        sessionStorage.setItem('userName', findUser.userName);
+        router.push('/dashboard');
+      } else {
+        setMsg('User name or password not match!')
+      }
+    } catch (error) {
+      console.log(error);
     }
 
   };
