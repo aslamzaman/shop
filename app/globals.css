@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face{
+  font-family: 'SutonnyMJ_Normal';
+  src: url('/fonts/SutonnyMJ-Regular.ttf');
+}
+
+@font-face{
+  font-family: 'SutonnyMJ_Bold';
+  src: url('/fonts/SutonnyMJ-Bold-Regular.ttf');
+}
