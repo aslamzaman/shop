@@ -3,9 +3,6 @@ import React, { useState, useEffect } from "react";
 import Add from "@/components/purchase/Add";
 import Edit from "@/components/purchase/Edit";
 import Delete from "@/components/purchase/Delete";
-// import Print from "@/components/purchase/Print";
-import { getDataFromFirebase } from "@/lib/firebaseFunction";
-import { sortArray } from "@/lib/utils";
 import { purchaseHelpers } from "@/helpers/purchaseHelpers";
 
 
@@ -53,8 +50,9 @@ const Purchase = () => {
                             <th className="text-start border-b border-gray-200 px-4 py-1">Product</th>
                             <th className="text-start border-b border-gray-200 px-4 py-1">Vendor</th>
                             <th className="text-center border-b border-gray-200 px-4 py-1">Date</th>
-                            <th className="text-center border-b border-gray-200 px-4 py-1">Unit</th>
-                            <th className="text-center border-b border-gray-200 px-4 py-1">Cost</th>
+                            <th className="text-center border-b border-gray-200 px-4 py-1">Quantity</th>
+                            <th className="text-center border-b border-gray-200 px-4 py-1">Purchase Price</th>
+                            <th className="text-center border-b border-gray-200 px-4 py-1">Sale Price</th>
                             <th className="text-center border-b border-gray-200 px-4 py-1">Amount</th>
                             <th className="w-[95px] border-b border-gray-200 px-4 py-2">
                                 <div className="w-[90px] h-[45px] flex justify-end space-x-2 p-1 font-normal">
@@ -71,8 +69,9 @@ const Purchase = () => {
                                     <td className="text-start py-1 px-4">{purchase.product}</td>
                                     <td className="text-start py-1 px-4">{purchase.vendor}</td>
                                     <td className="text-center py-1 px-4">{purchase.dt}</td>
-                                    <td className="text-center py-1 px-4">{purchase.unit}</td>
-                                    <td className="text-center py-1 px-4">{purchase.cost}</td>
+                                    <td className="text-center py-1 px-4">{purchase.qty}</td>
+                                    <td className="text-center py-1 px-4">{purchase.purchasePrice}</td>
+                                    <td className="text-center py-1 px-4">{purchase.salePrice}</td>
                                     <td className="text-center py-1 px-4">{purchase.subTotal}</td>
                                     <td className="text-center py-2">
                                         {purchase.isUpdatable ? (
@@ -86,7 +85,7 @@ const Purchase = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={7} className="text-center py-10 px-4">
+                                <td colSpan={8} className="text-center py-10 px-4">
                                     Data not available.
                                 </td>
                             </tr>

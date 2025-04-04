@@ -40,11 +40,11 @@ const MenuData = [
         ]
     },
     {
-        title: 'Profit or Loss',
+        title: 'Reports',
         group: [
             {
-                label: 'Purchase & Sale',
-                url: '/purchasesale'
+                label: 'Stock/Balance',
+                url: '/stockbalance'
             },
         ]
     },

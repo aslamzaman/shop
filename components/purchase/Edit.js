@@ -10,8 +10,10 @@ const Edit = ({ message, id, data }) => {
     const [productId, setProductId] = useState('');
     const [vendorId, setVendorId] = useState('');
     const [dt, setDt] = useState('');
-    const [unit, setUnit] = useState('');
-    const [cost, setCost] = useState('');
+    const [qty, setQty] = useState('');
+    const [purchasePrice, setPurchasePrice] = useState('');
+    const [salePrice, setSalePrice] = useState('');
+
     const [userId, setUserId] = useState('');
     const [createdAt, setCreatedAt] = useState('');
 
@@ -36,12 +38,13 @@ const Edit = ({ message, id, data }) => {
             setProducts(responseProduct);
             //-----------------------
 
-            const { productId, vendorId, dt, unit, cost, userId, createdAt } = data;
+            const { productId, vendorId, dt, qty, purchasePrice, salePrice, userId, createdAt } = data;
             setProductId(productId);
             setVendorId(vendorId);
             setDt(formatedDate(dt));
-            setUnit(unit);
-            setCost(cost);
+            setQty(qty);
+            setPurchasePrice(purchasePrice);
+            setSalePrice(salePrice);
             setUserId(userId);
             setCreatedAt(createdAt);
 
@@ -57,18 +60,22 @@ const Edit = ({ message, id, data }) => {
     };
 
 
+
     const createObject = () => {
         return {
             productId: productId,
             vendorId: vendorId,
             dt: dt,
-            unit: unit,
-            cost: cost,
+            qty: qty,
+            purchasePrice: purchasePrice,
+            salePrice: salePrice,
             userId: userId,
             createdAt: createdAt
         }
     }
 
+
+    
 
     const saveHandler = async (e) => {
         e.preventDefault();
@@ -118,8 +125,9 @@ const Edit = ({ message, id, data }) => {
 
                                     <TextDt Title="Date" Id="dt" Change={e => setDt(e.target.value)} Value={dt} />
 
-                                    <TextNum Title="Unit" Id="unit" Change={e => setUnit(e.target.value)} Value={unit} />
-                                    <TextNum Title="Cost" Id="cost" Change={e => setCost(e.target.value)} Value={cost} />
+                                    <TextNum Title="Quntity" Id="qty" Change={e => setQty(e.target.value)} Value={qty} />
+                                    <TextNum Title="Purchase Price" Id="purchasePrice" Change={e => setPurchasePrice(e.target.value)} Value={purchasePrice} />
+                                    <TextNum Title="Sale Price" Id="cost" Change={e => setSalePrice(e.target.value)} Value={salePrice} />
                                 </div>
                                 <div className="w-full mt-4 flex justify-start pointer-events-auto">
                                     <input type="button" onClick={closeEditForm} value="Close" className="bg-pink-600 hover:bg-pink-800 text-white text-center mt-3 mx-0.5 px-4 py-2 font-semibold rounded-md focus:ring-1 ring-blue-200 ring-offset-2 duration-300 cursor-pointer" />

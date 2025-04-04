@@ -4,7 +4,7 @@ import { deleteDataFromFirebase } from "@/lib/firebaseFunction";
 import LoadingDot from "../LoadingDot";
 
 
-const Delete = ({ message, id }) => {
+const Delete = ({ message, ids }) => {
     const [show, setShow] = useState(false);
     const [busy, setBusy] = useState(false);
 
@@ -20,15 +20,18 @@ const Delete = ({ message, id }) => {
 
 
     const deleteClick = async () => {
+        setBusy(true);
         try {
-            setBusy(true);
-            const msg = await deleteDataFromFirebase('sale', id);
-            message(msg);
+            for (let i = 0; i < ids.length; i++) {
+                const deletedId = ids[i];
+                await deleteDataFromFirebase('sale', deletedId);
+            }
+            message("Invoice delete successfully. Ids are " + ids.join(","));
         } catch (error) {
             console.log(error);
             message("Data deleting error");
         } finally {
-           setBusy(false);
+            setBusy(false);
             setShow(false);
         }
     }
@@ -78,6 +81,5 @@ const Delete = ({ message, id }) => {
     )
 }
 export default Delete;
-    
 
-    
+

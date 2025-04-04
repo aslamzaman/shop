@@ -1,5 +1,5 @@
 import { getDataFromFirebase } from "@/lib/firebaseFunction";
-import { sortArray } from "@/lib/utils";
+import { numberWithCommaISO, sortArray } from "@/lib/utils";
 
 
 const load = async () => {
@@ -29,7 +29,7 @@ export const purchaseHelpers = async () => {
         const matchPurchase = sales.find(sale => sale.purchaseId === purchase.id);
         const matchProduct = products.find(product => product.id === purchase.productId);
         const matchVendor = vendors.find(vendor => vendor.id === purchase.vendorId);
-        const subTotal = parseFloat(purchase.unit) * parseFloat(purchase.cost);
+        const subTotal = parseFloat(purchase.qty) * parseFloat(purchase.purchasePrice);
         return {
             ...purchase,
             isUpdatable: matchPurchase ? false : true,

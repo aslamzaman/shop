@@ -1,76 +1,78 @@
+import { sortArray, unique } from "@/lib/utils";
+import { loadEssentiaData } from "./loadEssentiaData";
 
-import { getDataFromFirebase } from "@/lib/firebaseFunction";
-import { sortArray } from "@/lib/utils";
 
 
-const load = async () => {
+const simplifyData = async () => {
     try {
-        const userId = sessionStorage.getItem('user');
-        const [purchase, product, vendor, customer, sale] = await Promise.all([
-            getDataFromFirebase("purchase", userId),
-            getDataFromFirebase("product", userId),
-            getDataFromFirebase("vendor", userId),
-            getDataFromFirebase("customer", userId),
-            getDataFromFirebase("sale", userId)
-        ]);
+        const { purchases, customers, sales } = await loadEssentiaData();
+        const saleInvoice = sales.map(sale => sale.invoice);
+        const uniqueInvoice = unique(saleInvoice);
 
-        return { purchase, product, vendor, customer, sale }
+        const data = sales.map(sale => {
+            const matchPurchase = purchases.find(purchase => purchase.id === sale.purchaseId);
+            const matchCustomer = customers.find(customer => customer.id === sale.customerId);
+            return {
+                ...sale,
+                customer: matchCustomer.name,
+                salePrice: matchPurchase.salePrice
+            }
+        });
+        return { data, uniqueInvoice };
     } catch (error) {
-        console.log(error);
+        console.error(error);
     }
 }
 
 
-export const productStock = async () => {
-    const data = await load();
-    const purchases = data.purchase;
-    const products = data.product;
-    const vendors = data.vendor;
-    const sales = data.sale;
-
-    const joinCollection = purchases.map(purchase => {
-        const matchSale = sales.filter(sale => sale.purchaseId === purchase.id);
-        const totalSale = matchSale.reduce((t, c) => t + parseFloat(c.unit), 0);
-        //-----------------------
-        const stock = parseFloat(purchase.unit) - totalSale;
+export const saleHelp = async () => {
+    const { data, uniqueInvoice } = await simplifyData();
+    // console.log({ data, uniqueInvoice });
+    const result = uniqueInvoice.map(invoice => {
+        const matchSale = data.filter(sale => sale.invoice === invoice);
+        const salePrice = matchSale.reduce((t, c) => t + (parseFloat(c.qty) * parseFloat(c.salePrice)), 0);
+        const totalPayment = matchSale.reduce((t, c) => t + parseFloat(c.payment), 0);
+        const totalDeduct = matchSale.reduce((t, c) => t + parseFloat(c.deduct), 0);
+        const paymentDues = salePrice - totalPayment - totalDeduct;
+        const ids = matchSale.map(sale => sale.id); // get ids in array
         return {
-            ...purchase,
-            stock: stock,
-            product: products.find(product => product.id === purchase.productId) || {},
-            vendor: vendors.find(vendor => vendor.id === purchase.vendorId) || {}
+            salePrice,
+            totalPayment,
+            totalDeduct,
+            paymentDues,
+            customer: matchSale[0].customer,
+            dt: matchSale[0].dt,
+            invoice: matchSale[0].invoice,
+            ids
         }
-    });
-    // If stock is zero not shwing ui
-    const noZeroData = joinCollection.filter(data => parseFloat(data.stock) > 0);
-    const sortedData = noZeroData.sort((a, b) => sortArray(new Date(b.createdAt), new Date(a.createdAt)));
+    })
+    const sortedData = result.sort((a, b) => sortArray(parseInt(b.invoice), parseInt(a.invoice)));
     return sortedData;
 }
 
 
+//------------------------------------------------------------
 
 
+export const getDataForInvoice = async (invoice) => {
+    try {
+        const { purchases, products, customers, vendors, sales } = await loadEssentiaData();
+        const saleByInvoice = sales.filter(sale => sale.invoice === invoice);
+        const result = saleByInvoice.map(sale => {
+            const matchPurchase = purchases.find(purchase => purchase.id === sale.purchaseId);
+            const matchProduct = products.find(product => product.id === matchPurchase.productId);
+            const matchCustomer = customers.find(customer => customer.id === sale.customerId);
+            const matchVendor = vendors.find(vendor => vendor.id === matchPurchase.vendorId);
+            return {
+                ...sale, matchPurchase, matchProduct, matchCustomer, matchVendor
+            }
+        })
 
-export const salesData = async () => {
-    const data = await load();
-    const purchases = data.purchase;
-    const products = data.product;
-    const vendors = data.vendor;
-    const customers = data.customer;
-    const sales = data.sale;
-    //-----------------------
-    const joinSaleCollection = sales.map(sale => {
-        const matchPurchase = purchases.find(purchase => purchase.id === sale.purchaseId);
-        const matchProduct = products.find(product => product.id === matchPurchase.productId);
-        const matchVendor = vendors.find(vendor => vendor.id === matchPurchase.vendorId);
-        const matchCustomer = customers.find(customer => customer.id === sale.customerId);
-        return {
-            ...sale,
-            product: matchProduct || {},
-            vendor: matchVendor || {},
-            customer: matchCustomer || {}
-        }
-    });
-    const sorteSaledData = joinSaleCollection.sort((a, b) => sortArray(new Date(b.createdAt), new Date(a.createdAt)));
-    return sorteSaledData;
+        return result;
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
 }
+
 
