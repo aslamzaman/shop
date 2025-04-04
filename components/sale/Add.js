@@ -5,7 +5,7 @@ import LoadingDot from "../LoadingDot";
 import { formatedDate, localStorageGetItem, delay, numberWithCommaISO, localStorageDeleteItem } from "@/lib/utils";
 import AddItem from "./AddItem";
 import { useRouter } from "next/navigation";
-import { stockBalance } from "@/helpers/stockbalanceHelpers";
+import { stockBalance } from "@/helpers/saleHelpers";
 
 
 
@@ -16,9 +16,10 @@ const Add = ({ message }) => {
     const [customerId, setCustomerId] = useState('');
     const [deduct, setDeduct] = useState('');
     const [payment, setPayment] = useState('');
+    const [tax, setTax] = useState('');
 
 
-    const [unit, setUnit] = useState('');
+
     const [show, setShow] = useState(false);
     const [busy, setBusy] = useState(false);
 
@@ -26,6 +27,7 @@ const Add = ({ message }) => {
 
 
     const [customers, setCustomers] = useState([]);
+    const [products, setProducts] = useState([]);
     const [localItems, setLocalItems] = useState([]);
     const [stocks, setStocks] = useState([]);
     const [msg, setMsg] = useState("");
@@ -33,22 +35,24 @@ const Add = ({ message }) => {
     const router = useRouter();
 
 
-    const loadLocalData = (purchaseData) => {
-        const local = localStorageGetItem('localItem');
-        const localData = [];
-        for (let i = 0; i < local.length; i++) {
-            const matchPurchase = purchaseData.find(stock => stock.id === local[i].purchaseId);
-            const total = parseFloat(matchPurchase.salePrice) * parseFloat(local[i].qty);
-            localData.push({
-                id: local[i].id,
+    const loadLocalData = async () => {
+        const localData = localStorageGetItem('localItem');
+        const data = await stockBalance();
+
+        const result = localData.map((local, i) => {
+            const matchPurchase = data.find(purchase => purchase.id === local.purchaseId);
+            const subTotal = parseFloat(matchPurchase.salePrice) * parseFloat(local.qty);
+            return {
+                ...local,
                 sl: (i + 1),
                 product: matchPurchase.product,
-                qty: local[i].qty,
-                total: total
-            })
-        }
-        const totalAmount = localData.reduce((t, c) => t + (parseFloat(c.qty) * parseFloat(c.total)), 0);
-        return { localData, total: totalAmount };
+                salePrice: matchPurchase.salePrice,
+                matchPurchase,
+                subTotal
+            }
+        })
+        const totalAmount = result.reduce((t, c) => t + parseFloat(c.subTotal), 0);
+        return { result, total: totalAmount };
     }
 
 
@@ -58,16 +62,17 @@ const Add = ({ message }) => {
         resetVariables();
         try {
             const userId = sessionStorage.getItem('user');
-            const customerResponse = await getDataFromFirebase('customer', userId);
-            setCustomers(customerResponse);
-            //---------------------
-            const data = await stockBalance("1970-01-01", "2070-12-31");
-            setStocks(data.result);
-            await delay(100);
+            const [customersData, productsData] = await Promise.all([
+                getDataFromFirebase('customer', userId),
+                getDataFromFirebase('product', userId)
+
+            ]);
+            setCustomers(customersData);
+            setProducts(productsData);
+            await delay(50);
             //-----------------------------
-            const local = loadLocalData(data.result);
-            console.log(local);
-            setLocalItems(local.localData);
+            const local = await loadLocalData();
+            setLocalItems(local.result);
             setTotal(local.total);
         } catch (error) {
             console.log(error);
@@ -87,8 +92,8 @@ const Add = ({ message }) => {
         setCustomerId('');
         setDeduct('0');
         setPayment('0');
+        setTax('0');
     }
-
 
 
 
@@ -109,6 +114,7 @@ const Add = ({ message }) => {
                 customerId: customerId,
                 deduct: i === 0 ? deduct : 0,
                 payment: i === 0 ? payment : 0,
+                tax: i === 0 ? tax : 0,
                 userId: userId,
                 purchaseId: localItems[i].purchaseId,
                 qty: localItems[i].qty,
@@ -121,13 +127,13 @@ const Add = ({ message }) => {
         try {
             for (let i = 0; i < data.length; i++) {
                 const msg = await addDataToFirebase("sale", data[i]);
-                console.log(msg);
+               // console.log(msg);
                 await delay(50);
             }
             message(`A total of ${data.length} data have been saved.`);
+            localStorage.removeItem("localItem");
             setBusy(false);
             setShow(false);
-            router.push('/sale');
         } catch (error) {
             console.error("Error saving sale data:", error);
         }
@@ -136,19 +142,18 @@ const Add = ({ message }) => {
     //--------------------------------------
 
 
-
-    const messageHandler = (data) => {
+    const messageHandler = async (data) => {
         setMsg(data);
-        const local = loadLocalData(stocks);
-        setLocalItems(local.localData);
+        const local = await loadLocalData();
+        setLocalItems(local.result);
         setTotal(local.total);
     }
 
 
-    const removeLocalItemHandeler = (id) => {
+    const removeLocalItemHandeler = async (id) => {
         const deleteData = localStorageDeleteItem('localItem', id);
-        const local = loadLocalData(stocks);
-        setLocalItems(local.localData);
+        const local = await loadLocalData();
+        setLocalItems(local.result);
         setTotal(local.total);
         setMsg(deleteData);
     }
@@ -160,7 +165,7 @@ const Add = ({ message }) => {
             {busy ? <LoadingDot message="Please wait" /> : null}
             {show && (
                 <div className="fixed left-0 top-[60px] right-0 bottom-0 p-4 bg-black bg-opacity-30 backdrop-blur-sm z-10 overflow-auto">
-                    <div className="w-full lg:w-9/12  mx-auto my-10 bg-white border-2 border-gray-300 rounded-md shadow-md duration-500">
+                    <div className="w-full lg:w-9/12  mx-auto my-6 bg-white border-2 border-gray-300 rounded-md shadow-md duration-500">
                         <div className="px-4 md:px-6 py-4 flex justify-between items-center border-b border-gray-300 rounded-t-md">
                             <h1 className="text-xl font-bold text-blue-600">Add New Data</h1>
                             <button onClick={closeAddForm} className="w-8 h-8 p-0.5 bg-gray-50 hover:bg-gray-300 rounded-md transition duration-500">
@@ -173,9 +178,9 @@ const Add = ({ message }) => {
                             <h1 className="w-full text-center text-blue-600">{msg}</h1>
                             <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-1 overflow-auto">
 
-                                <div className="p-4">
+                                <div className="px-4">
                                     <form onSubmit={saveHandler}>
-                                        <div className="grid grid-cols-1 gap-2">
+                                        <div className="grid grid-cols-1 gap-1">
                                             <TextEnDisabled Title="Auto Invoice" Id="invoice" Change={e => setInvoice(e.target.value)} Value={invoice} Chr={15} />
                                             <TextDt Title="Date" Id="dt" Change={e => setDt(e.target.value)} Value={dt} />
 
@@ -184,8 +189,9 @@ const Add = ({ message }) => {
                                             </DropdownEn>
                                             <TextNum Title="Payment" Id="unit" Change={e => setPayment(e.target.value)} Value={payment} />
                                             <TextNum Title="Deduct" Id="deduct" Change={e => setDeduct(e.target.value)} Value={deduct} />
+                                            <TextNum Title="Tax" Id="tax" Change={e => setTax(e.target.value)} Value={tax} />
                                         </div>
-                                        <div className="w-full mt-4 flex justify-start pointer-events-auto">
+                                        <div className="w-full mt-2 flex justify-start pointer-events-auto">
                                             <input type="button" onClick={closeAddForm} value="Close" className="bg-pink-600 hover:bg-pink-800 text-white text-center mt-3 mx-0.5 px-4 py-2 font-semibold rounded-md focus:ring-1 ring-blue-200 ring-offset-2 duration-300 cursor-pointer" />
                                             <BtnSubmit Title="Save" Class="bg-blue-600 hover:bg-blue-800 text-white" />
                                         </div>
@@ -199,9 +205,10 @@ const Add = ({ message }) => {
                                         <thead>
                                             <tr className="w-full bg-gray-200">
                                                 <th className="text-center border-b border-gray-200 px-4 py-1">SL</th>
-                                                <th className="text-center border-b border-gray-200 px-4 py-1">Item</th>
-                                                <th className="text-center border-b border-gray-200 px-4 py-1">Quantity</th>
-                                                <th className="text-center border-b border-gray-200 px-4 py-1">Total</th>
+                                                <th className="text-start border-b border-gray-200 px-4 py-1">Item</th>
+                                                <th className="text-end border-b border-gray-200 px-4 py-1">Quantity</th>
+                                                <th className="text-end border-b border-gray-200 px-4 py-1">Rate</th>
+                                                <th className="text-end border-b border-gray-200 px-4 py-1">Total</th>
                                                 <th className="w-[95px] border-b border-gray-200 px-4 py-2">
                                                     <div className="w-[90px] h-[45px] flex justify-end space-x-2 p-1 font-normal">
                                                         <AddItem message={messageHandler} />
@@ -214,9 +221,10 @@ const Add = ({ message }) => {
                                                 localItems.map(local => (
                                                     <tr className="border-b border-gray-200 hover:bg-gray-100" key={local.id}>
                                                         <td className="text-center py-1 px-4">{local.sl}</td>
-                                                        <td className="text-center py-1 px-4">{local.product}</td>
-                                                        <td className="text-center py-1 px-4">{local.qty}</td>
-                                                        <td className="text-center py-1 px-4">{local.total}</td>
+                                                        <td className="text-start py-1 px-4">{local.product}</td>
+                                                        <td className="text-end py-1 px-4">{numberWithCommaISO(local.qty)}</td>
+                                                        <td className="text-end py-1 px-4">{numberWithCommaISO(local.salePrice)}</td>
+                                                        <td className="text-end py-1 px-4">{numberWithCommaISO(local.subTotal)}</td>
                                                         <td className="text-center py-2">
                                                             <div className="h-8 flex justify-end items-center space-x-1 mt-1 mr-2">
                                                                 <button onClick={() => removeLocalItemHandeler(local.id)} className="w-7 h-7 p-0.5 mr-4 bg-gray-50 hover:bg-gray-300 rounded-md">

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { BtnSubmit, TextDt, TextNum, DropdownEn } from "@/components/Form";
+import { BtnSubmit, TextNum, DropdownEn } from "@/components/Form";
 import { localStorageAddItem } from "@/lib/utils";
-import { stockBalance } from "@/helpers/stockbalanceHelpers";
+import { stockBalance } from "@/helpers/saleHelpers";
 
 
 
@@ -15,7 +15,6 @@ const AddItem = ({ message }) => {
 
 
     const [show, setShow] = useState(false);
-    const [total, setTotal] = useState('0');
     const [purchases, setPurchases] = useState([]);
 
 
@@ -25,9 +24,9 @@ const AddItem = ({ message }) => {
         setShow(true);
         resetVariables();
         try {
-            const data = await stockBalance("1970-01-01", "2070-12-31");
+            const data = await stockBalance();
             console.log(data)
-            setPurchases(data.result);
+            setPurchases(data);
         } catch (error) {
             console.log(error);
         }

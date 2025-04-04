@@ -4,7 +4,7 @@ import Add from "@/components/sale/Add";
 import { saleHelp, getDataForInvoice } from "@/helpers/saleHelpers";
 import Delete from "@/components/sale/Delete";
 import { jsPDF } from "jspdf";
-import { numberWithCommaISO } from "@/lib/utils";
+import { numberWithCommaISO, formatedDate } from "@/lib/utils";
 
 
 
@@ -44,7 +44,7 @@ const Purchase = () => {
 
     const printHandler = async (invoice) => {
         const data = await getDataForInvoice(invoice);
-        const customer = await data[0].matchCustomer;
+        const customer = data[0].matchCustomer;
 
 
 
@@ -57,12 +57,14 @@ const Purchase = () => {
         });
 
         doc.setFont("times", "bold");
-        doc.setFontSize(22);
+        doc.setFontSize(20);
 
-        doc.text("Invoice", 105, 55, { align: "center" });
+        doc.text("INVOICE", 105, 55, { align: "center" });
 
         doc.setFontSize(11);
-        doc.line(50, 56.5, 160, 56.5);
+        doc.setDrawColor("#999999");
+        // doc.line(50, 56.5, 160, 56.5);
+
         doc.text("Bill To: ", 25, 75, { align: "left" });
         doc.text(`${customer.name}`, 40, 75, { align: "left" });
         doc.setFont("times", "normal");
@@ -71,15 +73,24 @@ const Purchase = () => {
         doc.text(`${customer.phone}`, 40, 90, { align: "left" });
 
 
+        doc.text(`Invoice Number: ${data[0].invoice}`, 183, 75, { align: "right" });
+        doc.text(`Invoice Date: ${formatedDate(data[0].dt)}`, 183, 80, { align: "right" });
+        doc.text(`Print Date: ${formatedDate(new Date())}`, 183, 85, { align: "right" });
+
+
+
+
+
         doc.setFont("times", "bold");
         doc.text("Product Name", 27, 110, { align: "left" });
         doc.text("Unit Price", 110, 110, { align: "center" });
         doc.text("Quantity", 145, 110, { align: "center" });
-        doc.text("Total", 180, 110, { align: "right" });
+        doc.text("Total", 183, 110, { align: "right" });
         doc.line(25, 112, 185, 112);
         doc.setFont("times", "normal");
 
         let y = 117;
+        let subTotal = 0;
         for (let i = 0; i < data.length; i++) {
             const total = parseFloat(data[i].matchPurchase.salePrice) * parseFloat(data[i].qty);
             const price = data[i].matchPurchase.salePrice;
@@ -87,11 +98,54 @@ const Purchase = () => {
             doc.text(`${data[i].matchProduct.name}`, 27, y, { align: "left" });
             doc.text(`${numberWithCommaISO(price)}`, 110, y, { align: "center" });
             doc.text(`${numberWithCommaISO(qty)}`, 145, y, { align: "center" });
-            doc.text(`${numberWithCommaISO(total)}`, 180, y, { align: "right" });
+            doc.text(`${numberWithCommaISO(total)}`, 183, y, { align: "right" });
+            subTotal = subTotal + total;
             y = y + 5;
         }
 
+        const tx = data.reduce((t, c) => t + parseFloat(c.tax), 0);
+        const taxCalculate = subTotal * (tx / 100);
+        const deduct = data.reduce((t, c) => t + parseFloat(c.deduct), 0);
+        const payment = data.reduce((t, c) => t + parseFloat(c.payment), 0);
 
+
+        const grandTotal = subTotal + taxCalculate - payment - deduct;
+
+        doc.line(25, y - 3, 185, y - 3);
+        doc.setFont("times", "bold");
+        doc.text("Sub Total", 27, y + 1, { align: "left" });
+        doc.text(`${numberWithCommaISO(subTotal)}`, 183, y + 1, { align: "right" });
+
+        doc.setFont("times", "normal");
+        doc.text(`Tax (${parseFloat(tx)}%)`, 27, y + 8, { align: "left" });
+        doc.text(`${numberWithCommaISO(taxCalculate)}`, 183, y + 8, { align: "right" });
+        doc.text("Payment", 27, y + 12, { align: "left" });
+        doc.text(`${numberWithCommaISO(payment)}`, 183, y + 13, { align: "right" });
+        doc.text("Deduct", 27, y + 18, { align: "left" });
+        doc.text(`${numberWithCommaISO(deduct)}`, 183, y + 18, { align: "right" });
+
+
+
+
+
+
+        doc.setFont("times", "bold");
+        doc.line(25, y + 19.5, 185, y + 19.5);
+        doc.text("Total", 27, y + 23, { align: "left" });
+        doc.text(`${numberWithCommaISO(grandTotal)}`, 183, y + 23, { align: "right" });
+
+
+
+
+        doc.text("Thank You", 183, y + 50, { align: "right" });
+        doc.setFont("times", "normal");
+        doc.setTextColor(100, 100, 100);
+        doc.text("I need your cooperation at all times.", 27, y + 50, { align: "left" });
+
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        doc.setFontSize(9);
+        doc.text("Please contact us for feedback regarding this software: aslamcmes@gmail.com", pageWidth - 12, pageHeight - 4, { align: "right" });
 
         doc.save("invoice.pdf");
     }
@@ -103,7 +157,7 @@ const Purchase = () => {
             <div className="w-full py-4">
                 <h1 className="w-full text-xl lg:text-3xl font-bold text-center text-blue-700">Sale</h1>
                 <p className="w-full text-center text-blue-300">&nbsp;{waitMsg}&nbsp;</p>
-                <p className="w-full text-center text-2xl text-green-700 animate-pulse">NB. You can print the invoice or remove from the <span className="font-bold">Invoice</span> menu.</p>
+                <p className="w-full text-center text-2xl text-green-700 animate-pulse">NB. You can also print from the <span className="font-bold">Invoice</span> menu.</p>
             </div>
 
 
@@ -119,7 +173,7 @@ const Purchase = () => {
                             <th className="text-start border-b border-gray-200 px-4 py-1">Invoice</th>
                             <th className="text-start border-b border-gray-200 px-4 py-1">Customer</th>
                             <th className="text-center border-b border-gray-200 px-4 py-1">Date</th>
-                            <th className="text-end border-b border-gray-200 px-4 py-1">Sale Price</th>
+                            <th className="text-end border-b border-gray-200 px-4 py-1">Total Sale</th>
                             <th className="text-end border-b border-gray-200 px-4 py-1">Payment</th>
                             <th className="text-end border-b border-gray-200 px-4 py-1">Deduct</th>
                             <th className="text-end border-b border-gray-200 px-4 py-1">Balance</th>
@@ -127,16 +181,19 @@ const Purchase = () => {
                         </tr>
                     </thead>
                     <tbody>
+
+
+
                         {sales.length ? (
                             sales.map(sale => (
                                 <tr className="border-b border-gray-200 hover:bg-gray-100" key={sale.invoice}>
                                     <td className="text-start py-1 px-4">{sale.invoice}</td>
                                     <td className="text-start py-1 px-4">{sale.customer}</td>
-                                    <td className="text-center py-1 px-4">{sale.dt}</td>
-                                    <td className="text-end py-1 px-4">{sale.salePrice}</td>
-                                    <td className="text-end py-1 px-4">{sale.totalPayment}</td>
-                                    <td className="text-end py-1 px-4">{sale.totalDeduct}</td>
-                                    <td className="text-end py-1 px-4">{sale.paymentDues}</td>
+                                    <td className="text-center py-1 px-4">{formatedDate(sale.dt)}</td>
+                                    <td className="text-end py-1 px-4">{numberWithCommaISO(sale.totalSalePriceWithTax)}</td>
+                                    <td className="text-end py-1 px-4">{numberWithCommaISO(sale.totalPayment)}</td>
+                                    <td className="text-end py-1 px-4">{numberWithCommaISO(sale.totalDeduct)}</td>
+                                    <td className="text-end py-1 px-4">{numberWithCommaISO(sale.paymentDues)}</td>
                                     <td className="flex justify-end items-center space-x-1 mr-2">
                                         <button onClick={() => printHandler(sale.invoice)} className="w-6 h-6">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-full h-full">
