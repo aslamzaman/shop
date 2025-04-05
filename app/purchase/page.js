@@ -3,21 +3,22 @@ import React, { useState, useEffect } from "react";
 import Add from "@/components/purchase/Add";
 import Edit from "@/components/purchase/Edit";
 import Delete from "@/components/purchase/Delete";
-import { purchaseHelpers } from "@/helpers/purchaseHelpers";
+import { purchaseData } from "@/helpers/purchaseHelpers";
+
 
 
 
 const Purchase = () => {
     const [purchases, setPurchases] = useState([]);
     const [waitMsg, setWaitMsg] = useState("");
-    const [msg, setMsg] = useState("Data ready");
+    const [msg, setMsg] = useState("Items that don't show edit and delete buttons are sales related.");
 
 
     useEffect(() => {
         const getData = async () => {
             setWaitMsg('Please Wait...');
             try {
-                const data = await purchaseHelpers();
+                const data = await purchaseData();
                 console.log(data);
                 setPurchases(data);
                 setWaitMsg('');

@@ -24,9 +24,8 @@ const AddItem = ({ message }) => {
         setShow(true);
         resetVariables();
         try {
-            const data = await stockBalance();
-            console.log(data)
-            setPurchases(data);
+            const { purchaseData, customers, products, vendors } = await stockBalance();
+            setPurchases(purchaseData);
         } catch (error) {
             console.log(error);
         }
@@ -68,10 +67,10 @@ const AddItem = ({ message }) => {
     const saveHandler = (e) => {
         e.preventDefault();
         const isBalance = check();
-       if(!isBalance){
-        setMsg("Balance not available!");
-        return false;
-       }
+        if (!isBalance) {
+            setMsg("Balance not available!");
+            return false;
+        }
 
         try {
             const newObject = createObject();

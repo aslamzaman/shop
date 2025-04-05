@@ -37,10 +37,10 @@ const Add = ({ message }) => {
 
     const loadLocalData = async () => {
         const localData = localStorageGetItem('localItem');
-        const data = await stockBalance();
+        const { purchaseData } = await stockBalance();
 
         const result = localData.map((local, i) => {
-            const matchPurchase = data.find(purchase => purchase.id === local.purchaseId);
+            const matchPurchase = purchaseData.find(purchase => purchase.id === local.purchaseId);
             const subTotal = parseFloat(matchPurchase.salePrice) * parseFloat(local.qty);
             return {
                 ...local,
@@ -51,29 +51,24 @@ const Add = ({ message }) => {
                 subTotal
             }
         })
-        const totalAmount = result.reduce((t, c) => t + parseFloat(c.subTotal), 0);
-        return { result, total: totalAmount };
-    }
 
+        const total = result.reduce((t, c) => t + parseFloat(c.subTotal), 0);
+        return { result, total };
+
+    }
 
 
     const showAddForm = async () => {
         setShow(true);
         resetVariables();
         try {
-            const userId = sessionStorage.getItem('user');
-            const [customersData, productsData] = await Promise.all([
-                getDataFromFirebase('customer', userId),
-                getDataFromFirebase('product', userId)
-
-            ]);
-            setCustomers(customersData);
-            setProducts(productsData);
-            await delay(50);
-            //-----------------------------
-            const local = await loadLocalData();
-            setLocalItems(local.result);
-            setTotal(local.total);
+            const { customers, products } = await stockBalance();
+            setCustomers(customers);
+            setProducts(products);
+            //-------------------------
+            const { result, total } = await loadLocalData();
+            setLocalItems(result);
+            setTotal(total);
         } catch (error) {
             console.log(error);
         }
@@ -127,7 +122,7 @@ const Add = ({ message }) => {
         try {
             for (let i = 0; i < data.length; i++) {
                 const msg = await addDataToFirebase("sale", data[i]);
-               // console.log(msg);
+                // console.log(msg);
                 await delay(50);
             }
             message(`A total of ${data.length} data have been saved.`);
@@ -144,17 +139,17 @@ const Add = ({ message }) => {
 
     const messageHandler = async (data) => {
         setMsg(data);
-        const local = await loadLocalData();
-        setLocalItems(local.result);
-        setTotal(local.total);
+        const { result, total } = await loadLocalData();
+        setLocalItems(result);
+        setTotal(total);
     }
 
 
     const removeLocalItemHandeler = async (id) => {
         const deleteData = localStorageDeleteItem('localItem', id);
-        const local = await loadLocalData();
-        setLocalItems(local.result);
-        setTotal(local.total);
+        const { result, total } = await loadLocalData();
+        setLocalItems(result);
+        setTotal(total)
         setMsg(deleteData);
     }
 

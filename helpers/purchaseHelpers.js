@@ -1,43 +1,49 @@
 import { getDataFromFirebase } from "@/lib/firebaseFunction";
-import { numberWithCommaISO, sortArray } from "@/lib/utils";
+import { sortArray } from "@/lib/utils";
 
 
-const load = async () => {
+export const purchaseSimplify = async () => {
     try {
         const userId = sessionStorage.getItem('user');
-        const [purchases, products, vendors, sales] = await Promise.all([
+        const [purchases, products, vendors] = await Promise.all([
             getDataFromFirebase("purchase", userId),
             getDataFromFirebase("product", userId),
-            getDataFromFirebase("vendor", userId),
-            getDataFromFirebase("sale", userId)
-
+            getDataFromFirebase("vendor", userId)
         ]);
-        return { purchases, products, vendors, sales };
+        const result = purchases.map(purchase => {
+            const matchProduct = products.find(product => product.id === purchase.productId);
+            const matchVendor = vendors.find(vendor => vendor.id === purchase.vendorId);
+            return {
+                ...purchase, matchProduct, matchVendor
+            }
+        })
+        const data = result.sort((a, b) => sortArray(new Date(b.createdAt), new Date(a.createdAt)));
+        return data;
     } catch (error) {
         console.error("Error fetching data:", error);
     }
 }
 
 
+export const purchaseData = async () => {
+    const userId = sessionStorage.getItem('user');
+    const [purchases, sales] = await Promise.all([
+        purchaseSimplify(),
+        getDataFromFirebase("sale", userId)
+    ]);
+    const result = purchases.map(purchase => {
+        const matchSale = sales.filter(sale => sale.purchaseId === purchase.id);
 
-
-
-export const purchaseHelpers = async () => {
-    const { purchases, products, vendors, sales } = await load();
-
-    const joinCollection = purchases.map(purchase => {
-        const matchPurchase = sales.find(sale => sale.purchaseId === purchase.id);
-        const matchProduct = products.find(product => product.id === purchase.productId);
-        const matchVendor = vendors.find(vendor => vendor.id === purchase.vendorId);
         const subTotal = parseFloat(purchase.qty) * parseFloat(purchase.purchasePrice);
+
         return {
             ...purchase,
-            isUpdatable: matchPurchase ? false : true,
-            product: matchProduct.name,
-            vendor: matchVendor.name,
+            isUpdatable: matchSale.length > 0 ? false : true,
+            product: purchase.matchProduct.name,
+            vendor: purchase.matchVendor.name,
             subTotal: subTotal.toFixed(2)
         }
     });
-    const sortedData = joinCollection.sort((a, b) => sortArray(new Date(b.createdAt), new Date(a.createdAt)));
-    return sortedData;
+    const data = result.sort((a, b) => sortArray(new Date(b.createdAt), new Date(a.createdAt)));
+    return data;
 }

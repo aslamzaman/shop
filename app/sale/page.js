@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Add from "@/components/sale/Add";
-import { saleHelp, getDataForInvoice } from "@/helpers/saleHelpers";
+import { saleHelp, getDataForInvoice, saleHelpers } from "@/helpers/saleHelpers";
 import Delete from "@/components/sale/Delete";
 import { jsPDF } from "jspdf";
 import { numberWithCommaISO, formatedDate } from "@/lib/utils";
@@ -22,7 +22,7 @@ const Purchase = () => {
         const getData = async () => {
             setWaitMsg('Please Wait...');
             try {
-                const data = await saleHelp();
+                const data = await saleHelpers();
                 // console.log(data);
                 setSales(data);
                 setWaitMsg('');
@@ -44,7 +44,11 @@ const Purchase = () => {
 
     const printHandler = async (invoice) => {
         const data = await getDataForInvoice(invoice);
-        const customer = data[0].matchCustomer;
+        console.log({ data });
+        const customer = data[0].matchCustomer.name;
+        const customerAddress = data[0].matchCustomer.address;
+        const customerEmail = data[0].matchCustomer.email;
+        const customerPhone = data[0].matchCustomer.phone;
 
 
 
@@ -66,12 +70,11 @@ const Purchase = () => {
         // doc.line(50, 56.5, 160, 56.5);
 
         doc.text("Bill To: ", 25, 75, { align: "left" });
-        doc.text(`${customer.name}`, 40, 75, { align: "left" });
+        doc.text(`${customer}`, 40, 75, { align: "left" });
         doc.setFont("times", "normal");
-        doc.text(`${customer.address}`, 40, 80, { align: "left" });
-        doc.text(`${customer.email}`, 40, 85, { align: "left" });
-        doc.text(`${customer.phone}`, 40, 90, { align: "left" });
-
+        doc.text(`${customerAddress}`, 40, 80, { align: "left" });
+        doc.text(`${customerEmail}`, 40, 85, { align: "left" });
+        doc.text(`${customerPhone}`, 40, 90, { align: "left" });
 
         doc.text(`Invoice Number: ${data[0].invoice}`, 183, 75, { align: "right" });
         doc.text(`Invoice Date: ${formatedDate(data[0].dt)}`, 183, 80, { align: "right" });
@@ -92,10 +95,11 @@ const Purchase = () => {
         let y = 117;
         let subTotal = 0;
         for (let i = 0; i < data.length; i++) {
+            const product = data[i].matchPurchase.matchProduct.name;
             const total = parseFloat(data[i].matchPurchase.salePrice) * parseFloat(data[i].qty);
             const price = data[i].matchPurchase.salePrice;
             const qty = data[i].qty;
-            doc.text(`${data[i].matchProduct.name}`, 27, y, { align: "left" });
+            doc.text(`${product}`, 27, y, { align: "left" });
             doc.text(`${numberWithCommaISO(price)}`, 110, y, { align: "center" });
             doc.text(`${numberWithCommaISO(qty)}`, 145, y, { align: "center" });
             doc.text(`${numberWithCommaISO(total)}`, 183, y, { align: "right" });
@@ -108,34 +112,27 @@ const Purchase = () => {
         const deduct = data.reduce((t, c) => t + parseFloat(c.deduct), 0);
         const payment = data.reduce((t, c) => t + parseFloat(c.payment), 0);
 
-
-        const grandTotal = subTotal + taxCalculate - payment - deduct;
+        const dues = subTotal + taxCalculate - payment - deduct;
 
         doc.line(25, y - 3, 185, y - 3);
         doc.setFont("times", "bold");
         doc.text("Sub Total", 27, y + 1, { align: "left" });
         doc.text(`${numberWithCommaISO(subTotal)}`, 183, y + 1, { align: "right" });
 
+
         doc.setFont("times", "normal");
         doc.text(`Tax (${parseFloat(tx)}%)`, 27, y + 8, { align: "left" });
         doc.text(`${numberWithCommaISO(taxCalculate)}`, 183, y + 8, { align: "right" });
-        doc.text("Payment", 27, y + 12, { align: "left" });
+        doc.text("Payment", 27, y + 13, { align: "left" });
         doc.text(`${numberWithCommaISO(payment)}`, 183, y + 13, { align: "right" });
         doc.text("Deduct", 27, y + 18, { align: "left" });
         doc.text(`${numberWithCommaISO(deduct)}`, 183, y + 18, { align: "right" });
 
 
-
-
-
-
         doc.setFont("times", "bold");
         doc.line(25, y + 19.5, 185, y + 19.5);
-        doc.text("Total", 27, y + 23, { align: "left" });
-        doc.text(`${numberWithCommaISO(grandTotal)}`, 183, y + 23, { align: "right" });
-
-
-
+        doc.text("Balance/Dues", 27, y + 23, { align: "left" });
+        doc.text(`${numberWithCommaISO(dues)}`, 183, y + 23, { align: "right" });
 
         doc.text("Thank You", 183, y + 50, { align: "right" });
         doc.setFont("times", "normal");
@@ -173,7 +170,8 @@ const Purchase = () => {
                             <th className="text-start border-b border-gray-200 px-4 py-1">Invoice</th>
                             <th className="text-start border-b border-gray-200 px-4 py-1">Customer</th>
                             <th className="text-center border-b border-gray-200 px-4 py-1">Date</th>
-                            <th className="text-end border-b border-gray-200 px-4 py-1">Total Sale</th>
+                            <th className="text-end border-b border-gray-200 px-4 py-1">Sale Amount</th>
+                            <th className="text-end border-b border-gray-200 px-4 py-1">Tax</th>
                             <th className="text-end border-b border-gray-200 px-4 py-1">Payment</th>
                             <th className="text-end border-b border-gray-200 px-4 py-1">Deduct</th>
                             <th className="text-end border-b border-gray-200 px-4 py-1">Balance</th>
@@ -190,10 +188,11 @@ const Purchase = () => {
                                     <td className="text-start py-1 px-4">{sale.invoice}</td>
                                     <td className="text-start py-1 px-4">{sale.customer}</td>
                                     <td className="text-center py-1 px-4">{formatedDate(sale.dt)}</td>
-                                    <td className="text-end py-1 px-4">{numberWithCommaISO(sale.totalSalePriceWithTax)}</td>
+                                    <td className="text-end py-1 px-4">{numberWithCommaISO(sale.saleAmount)}</td>
+                                    <td className="text-end py-1 px-4">{numberWithCommaISO(sale.taxAmount)}</td>
                                     <td className="text-end py-1 px-4">{numberWithCommaISO(sale.totalPayment)}</td>
                                     <td className="text-end py-1 px-4">{numberWithCommaISO(sale.totalDeduct)}</td>
-                                    <td className="text-end py-1 px-4">{numberWithCommaISO(sale.paymentDues)}</td>
+                                    <td className="text-end py-1 px-4">{numberWithCommaISO(sale.balance)}</td>
                                     <td className="flex justify-end items-center space-x-1 mr-2">
                                         <button onClick={() => printHandler(sale.invoice)} className="w-6 h-6">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-full h-full">
