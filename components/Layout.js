@@ -66,7 +66,7 @@ const MenuData = [
         group: [
             {
                 label: 'Customer Dues',
-                url: '/purchase'
+                url: '/customerdues'
             },
         ]
     },

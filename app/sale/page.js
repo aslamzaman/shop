@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Add from "@/components/sale/Add";
-import { jsPDF } from "jspdf";
 import { getDataFromFirebase } from "@/lib/firebaseFunction";
 import { formatedDate, numberWithCommaISO, sortArray } from "@/lib/utils";
 import Delete from "@/components/sale/Delete";
