@@ -57,7 +57,7 @@ const MenuData = [
             },
             {
                 label: 'Money Receipt',
-                url: '/sale'
+                url: '/moneyreceipt'
             }
         ]
     },

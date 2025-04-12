@@ -36,7 +36,7 @@ const getSale = async () => {
         const totalTax = matchSale.reduce((t, c) => t + ((c.qty * c.matchPurchase.salePrice) * (c.matchPurchase.tax / 100)), 0);
         const totalPayment = matchSale.reduce((t, c) => t + c.payment, 0);
         const totalDeduct = matchSale.reduce((t, c) => t + c.deduct, 0);
-        const balance = totalSale + totalTax - totalPayment - totalDeduct;
+        const balance = (totalSale + totalTax) - (totalPayment + totalDeduct);
         return {
             invoice,
             customer: matchSale[0].customer,
@@ -178,7 +178,7 @@ const Invoice = () => {
             doc.text(`${numberWithCommaISO(totalDiscount)}`, 183, y + 13, { align: "right" });
 
             //----------------------------------------------------
-            const dues = subTotal - totalPayment - totalDiscount;
+            const dues = subTotal - (totalPayment + totalDiscount);
             doc.setFont("times", "bold");
             doc.line(25, y + 14.5, 185, y + 14.5);
             doc.text("Total Payable", 27, y + 18, { align: "left" });

@@ -5,7 +5,7 @@ import LoadingDot from "../LoadingDot";
 
 
 const Delete = ({ message, id, data }) => {
-    const [name, setName] = useState("");
+    const [refNo, setRefNo] = useState("");
 
     const [show, setShow] = useState(false);
     const [busy, setBusy] = useState(false);
@@ -13,8 +13,8 @@ const Delete = ({ message, id, data }) => {
 
     const showDeleteForm = () => {
         setShow(true);
-        const {name} = data;
-        setName(name);
+        const {refNo} = data;
+        setRefNo(refNo);
     }
 
 
@@ -26,7 +26,7 @@ const Delete = ({ message, id, data }) => {
     const deleteClick = async () => {
         try {
             setBusy(true);
-            const msg = await deleteDataFromFirebase('customer', id);
+            const msg = await deleteDataFromFirebase('moneyreceipt', id);
             message(msg);
         } catch (error) {
             console.log(error);
@@ -64,7 +64,7 @@ const Delete = ({ message, id, data }) => {
 
                                 <h1 className="text-sm text-center text-gray-600 mt-4">
                                     Are you sure to proceed with the deletion?</h1>
-                                <h1 className="text-center text-gray-600 font-bold">{name}</h1>
+                                <h1 className="text-center text-gray-600 font-bold">{refNo}</h1>
                             </div>
                             <div className="w-full mt-4 flex justify-start pointer-events-auto">
                                 <BtnEn Title="Close" Click={closeDeleteForm} Class="bg-pink-700 hover:bg-pink-900 text-white mr-1" />
