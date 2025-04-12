@@ -62,8 +62,12 @@ const MenuData = [
         ]
     },
     {
-        title: 'Dues',
+        title: 'Dues/Payments',
         group: [
+            {
+                label: 'Payments',
+                url: '/payment'
+            },
             {
                 label: 'Customer Dues',
                 url: '/customerdues'
@@ -118,7 +122,7 @@ const Home = ({ children }) => {
         }
     }
 
-    
+
 
 
     const logOutHandler = () => {
@@ -197,7 +201,7 @@ const LeftMenu = () => {
                     </div>
                 )
             }) : null}
-
+            <div className='w-full h-[2px] my-4 bg-gray-200'></div>
         </>
     )
 
