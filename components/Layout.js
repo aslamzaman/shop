@@ -12,16 +12,16 @@ const MenuData = [
         title: 'Settings',
         group: [
             {
-                label: 'Customer',
+                label: 'Customers',
                 url: '/customer'
             },
             {
-                label: 'Vendor',
+                label: 'Vendors',
                 url: '/vendor'
             },
 
             {
-                label: 'Product',
+                label: 'Products',
                 url: '/product'
             },
         ]
@@ -30,30 +30,25 @@ const MenuData = [
         title: 'Purchase & Sale',
         group: [
             {
-                label: 'Purchase',
+                label: 'Purchases',
                 url: '/purchase'
             },
             {
-                label: 'Sale',
+                label: 'Sales',
                 url: '/sale'
+            },
+            {
+                label: 'Payments',
+                url: '/payment'
             }
         ]
     },
     {
-        title: 'Balance',
+        title: 'Dues/Balance',
         group: [
             {
                 label: 'Stock/Balance',
                 url: '/stockbalance'
-            },
-        ]
-    },
-    {
-        title: 'Dues/Payments',
-        group: [
-            {
-                label: 'Payments',
-                url: '/payment'
             },
             {
                 label: 'Customers dues',

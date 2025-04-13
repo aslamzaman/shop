@@ -115,16 +115,6 @@ const Purchasesale = () => {
 
 
     const printHandler = async () => {
-/*
- return {
-                    ...purchase,
-                    product: matchProduct.name,
-                    vendor: matchVendor.name,
-                    sale,
-                    stock,
-                    stockAmount: stockAmount,
-                }
-*/
 
         const stockTable = stocks.map(stock => [stock.product, stock.dt, numberWithCommaISO(stock.qty), numberWithCommaISO(stock.sale), numberWithCommaISO(stock.stock), numberWithCommaISO(stock.purchasePrice), numberWithCommaISO(stock.stockAmount)]);
         stockTable.push(["Total", "", "", "", "", "", numberWithCommaISO(total)])
@@ -168,6 +158,54 @@ const Purchasesale = () => {
                 doc.text(`Print Date: ${formatedDate(new Date())}`, 195.5, 62, { align: 'right' });
             }
         });
+
+
+
+        doc.autoTable({
+            theme: 'grid',
+            headStyles: {
+                fillColor: 'white',
+                textColor: "black"
+            },
+            columnStyles: {
+                0: { halign: 'left', cellWidth: 30 },
+                1: { halign: 'center', },
+                2: { halign: 'center' },
+                3: { halign: 'center' },
+                4: { halign: 'center' },
+                5: { halign: 'right' },
+                6: { halign: 'right' },
+            },  // 0, 1, 2, ...
+            startY: 63, // Start position of the table
+            tableWidth: 'auto',
+            margin: { top: 20, botton: 20 },
+            head: [
+                [{ content: 'Product', styles: { halign: 'left', lineWidth: 0.1, } },
+                { content: 'Date', styles: { halign: 'center', lineWidth: 0.1, } },
+                { content: 'Purchase', styles: { halign: 'center', lineWidth: 0.1, } },
+                { content: 'Sale', styles: { halign: 'center', lineWidth: 0.1, } },
+                { content: 'Stock', styles: { halign: 'center', lineWidth: 0.1, } },
+                { content: 'Price', styles: { halign: 'right', lineWidth: 0.1, } },
+                { content: 'Amount', styles: { halign: 'right', lineWidth: 0.1, } }],
+            ], // Table headers  
+            body: stockTable,
+            didDrawPage: (data) => {
+                doc.setFontSize(16);
+                doc.text('Stock/Balance', 105, 50, { align: 'center' });
+                doc.setFontSize(10);
+                doc.text(`Period: ${searchDate1} to ${searchDate2}`, 105, 55, { align: 'center' });
+                doc.setFontSize(8);
+                doc.text(`Print Date: ${formatedDate(new Date())}`, 195.5, 62, { align: 'right' });
+            }
+        });
+
+
+
+
+
+
+
+
 
         // Set page numbers
         const numOfPages = doc.internal.getNumberOfPages();
