@@ -18,7 +18,7 @@ const Dashboard = () => {
 
             <Image src={logo} alt="logo" width={1875} height={1206} className="w-64 h-auto mx-auto" />
 
-            <h1 className="w-full py-4 text-xl lg:text-4xl font-bold text-center text-blue-700 leading-6">SHOPDATABASE<br /> <span className="text-xl text-blue-400">Super-easy storage system</span><br /><span className="text-sm text-green-500 animate-pulse">You don't need a shop note book. We provide all your accounts.</span></h1>
+            <h1 className="w-full py-4 text-xl lg:text-4xl font-bold text-center text-blue-700 leading-6">SHOPDATABASE<br /> <span className="text-xl text-blue-400">Super-easy storage system</span><br /><span className="text-sm text-green-500 animate-pulse">No need to write notes again and again. You will find all your accounting calculations here.</span></h1>
             <div className="p-4 w-full grid grid-cols-2 lg:grid-cols-4 gap-4 overflow-auto">
                <Panel title="Customers" amount="500" />
                <Panel title="Vendors" amount="300" />
