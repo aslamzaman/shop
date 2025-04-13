@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BtnSubmit, TextDt, DropdownEn, TextNum } from "@/components/Form";
+import { TextEn, BtnSubmit, DropdownEn, TextDt, TextNum } from "@/components/Form";
 import { addDataToFirebase, getDataFromFirebase } from "@/lib/firebaseFunction";
 import { paymentSchema } from "@/lib/Schema";
 import LoadingDot from "../LoadingDot";
@@ -8,16 +8,20 @@ import { formatedDate } from "@/lib/utils";
 const Add = ({ message }) => {
     const [customerId, setCustomerId] = useState('');
     const [dt, setDt] = useState('');
-    const [cash, setCash] = useState('');
+    const [cashType, setCashType] = useState('');
+    const [bank, setBank] = useState('');
+    const [chequeNo, setChequeNo] = useState('');
+    const [chequeDt, setChequeDt] = useState('');
+    const [purpose, setPurpose] = useState('');
     const [amount, setAmount] = useState('');
 
 
 
     const [show, setShow] = useState(false);
     const [busy, setBusy] = useState(false);
+    const [isBank, setIsBank] = useState(false);
 
     const [customers, setCustomers] = useState([]);
-
 
 
     const showAddForm = async () => {
@@ -41,8 +45,13 @@ const Add = ({ message }) => {
     const resetVariables = () => {
         setCustomerId('');
         setDt(formatedDate(new Date()));
-        setCash('Cash');
+        setCashType('Cash');
+        setBank('');
+        setChequeNo('');
+        setChequeDt(formatedDate("1970-01-01"));
+        setPurpose('');
         setAmount('');
+        setIsBank(false);
     }
 
 
@@ -51,9 +60,10 @@ const Add = ({ message }) => {
         e.preventDefault();
         try {
             setBusy(true);
-            // 5 objects ------
+            // 10 objects ------
             const userId = sessionStorage.getItem('user');
-            const arrayObject = [customerId, dt, cash, amount, userId];
+            const refNo = Math.round(Date.now() / 1000);
+            const arrayObject = [refNo, customerId, dt, cashType, bank, chequeNo, chequeDt, purpose, amount, userId];
             const data = paymentSchema(arrayObject);
             const msg = await addDataToFirebase("payment", data);
             message(msg);
@@ -65,6 +75,23 @@ const Add = ({ message }) => {
             setShow(false);
         }
     }
+
+    const cashTypeChangeHandler = (e) => {
+        const event = e.target.value;
+        setCashType(event);
+        if (event === 'Cash') {
+            setIsBank(false);
+            setBank('');
+            setChequeNo('');
+            setChequeDt(formatedDate("1970-01-01"));
+        } else {
+            setIsBank(true);
+            setBank('');
+            setChequeNo('');
+            setChequeDt(formatedDate(new Date()));
+        }
+    }
+
 
 
     return (
@@ -90,11 +117,18 @@ const Add = ({ message }) => {
                                                 {customers.length ? customers.map(customer => <option value={customer.id} key={customer.id}>{customer.name}</option>) : null}
                                             </DropdownEn>
                                             <TextDt Title="Date" Id="dt" Change={e => setDt(e.target.value)} Value={dt} />
-                                            <DropdownEn Title="Cash" Id="cash" Change={e => setCash(e.target.value)} Value={cash}>
+                                            <DropdownEn Title="Cash Type" Id="cashType" Change={cashTypeChangeHandler} Value={cashType}>
                                                 <option value="Cash">Cash</option>
                                                 <option value="Cheque">Cheque</option>
                                             </DropdownEn>
+                                            {isBank ? (<>
+                                                <TextEn Title="Bank" Id="bank" Change={e => setBank(e.target.value)} Value={bank} Chr={50} />
+                                                <TextEn Title="ChequeNo" Id="chequeNo" Change={e => setChequeNo(e.target.value)} Value={chequeNo} Chr={50} />
+                                                <TextDt Title="ChequeDt" Id="chequeDt" Change={e => setChequeDt(e.target.value)} Value={chequeDt} />
+                                            </>) : null}
+                                            <TextEn Title="Purpose" Id="purpose" Change={e => setPurpose(e.target.value)} Value={purpose} Chr={50} />
                                             <TextNum Title="Amount" Id="amount" Change={e => setAmount(e.target.value)} Value={amount} />
+
                                         </div>
                                         <div className="w-full mt-4 flex justify-start pointer-events-auto">
                                             <input type="button" onClick={closeAddForm} value="Close" className="bg-pink-600 hover:bg-pink-800 text-white text-center mt-3 mx-0.5 px-4 py-2 font-semibold rounded-md focus:ring-1 ring-blue-200 ring-offset-2 duration-300 cursor-pointer" />

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Image from "next/image";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import logo from "@/public/images/logo/logo.png";
+import logo from "@/public/images/logo/shop.png";
 
 
 
@@ -40,11 +40,24 @@ const MenuData = [
         ]
     },
     {
-        title: 'Reports',
+        title: 'Balance',
         group: [
             {
                 label: 'Stock/Balance',
                 url: '/stockbalance'
+            },
+        ]
+    },
+    {
+        title: 'Dues/Payments',
+        group: [
+            {
+                label: 'Payments',
+                url: '/payment'
+            },
+            {
+                label: 'Customers dues',
+                url: '/customerdues'
             },
         ]
     },
@@ -59,19 +72,6 @@ const MenuData = [
                 label: 'Money Receipt',
                 url: '/moneyreceipt'
             }
-        ]
-    },
-    {
-        title: 'Dues/Payments',
-        group: [
-            {
-                label: 'Payments',
-                url: '/payment'
-            },
-            {
-                label: 'Customer Dues',
-                url: '/customerdues'
-            },
         ]
     },
 
@@ -115,7 +115,6 @@ const Home = ({ children }) => {
 
 
 
-
     const menuHideHandler = (e) => {
         if (e.target.id === 'leftMenu') {
             setMenuPos(posLeft);
@@ -124,12 +123,10 @@ const Home = ({ children }) => {
 
 
 
-
     const logOutHandler = () => {
         sessionStorage.clear();
         router.push('/');
     }
-
 
 
 
@@ -141,8 +138,8 @@ const Home = ({ children }) => {
                         <MenuBar click={menuCloseHander} />
                     </div>
                     <Link href="/dashboard" className='flex items-center justify-start space-x-2'>
-                        <Image src={logo} alt='Logo' width={256} height={256} className='w-7 lg:w-8 h-auto' />
-                        <h1 className='text-start text-base lg:text-xl text-blue-600 font-bold uppercase scale-y-150'>Shop</h1>
+                        <Image src={logo} alt='Logo' width={164} height={106} className='w-12 lg:w-16 h-auto' />
+                        <h1 className='text-start text-base lg:text-xl text-blue-600 font-bold uppercase scale-y-150'>Shopdatabase</h1>
                     </Link>
                 </div>
 
@@ -160,7 +157,7 @@ const Home = ({ children }) => {
             <div id="leftMenu" onClick={menuHideHandler} className={`fixed ${menuPos} top-[60px] bottom-0 transition-all duration-500 z-40`}>
                 <div className='w-[250px] h-[calc(100vh-60px)] pb-[100px] flex flex-col text-sm md:text-base bg-gray-100 border-r-2 border-gray-200 drop-shadow-xl overflow-auto'>
                     <LeftMenu />
-                    <button onClick={logOutHandler} className='w-full text-start pl-8 hover:bg-gray-300 transition-all duration-500'>Logout</button>
+                    <button onClick={logOutHandler} className='w-full text-start pl-8 hover:bg-gray-300 transition-all duration-500 cursor-pointer'>Logout</button>
                 </div>
             </div>
 
@@ -169,7 +166,7 @@ const Home = ({ children }) => {
             <div id="container" className='fixed left-0 top-[60px] right-0 bottom-0 flex'>
                 <div id="leftBar" className="hidden lg:block w-[300px] h-[calc(100vh-60px)] pb-[100px] flex flex-col bg-gray-100 border-r-2 border-gray-200 drop-shadow-xl overflow-auto">
                     <LeftMenu />
-                    <button onClick={logOutHandler} className='w-full text-start pl-8 hover:bg-gray-300 transition-all duration-500'>Logout</button>
+                    <button onClick={logOutHandler} className='w-full text-start pl-8 hover:bg-gray-300 transition-all duration-500 cursor-pointer'>Logout</button>
                 </div>
 
 
@@ -180,6 +177,7 @@ const Home = ({ children }) => {
             </div>
         </>
     )
+
 }
 
 export default Home
@@ -211,7 +209,7 @@ const LeftMenu = () => {
 
 
 const MenuBar = ({ click }) => {
-    return <button onClick={click} className='w-7 h-7 flex item-center'><svg xmlns="http://www.w3.org/2000/svg" fill='none' viewBox='0 0 30 30'>
+    return <button onClick={click} className='w-7 h-7 flex item-center cursor-pointer'><svg xmlns="http://www.w3.org/2000/svg" fill='none' viewBox='0 0 30 30'>
         <path d="M2 8 L28 8 M2 15 L28 15 M2 22 L28 22"
             className="fill-none stroke-gray-500" style={{ strokeWidth: '4px' }} />
     </svg></button>

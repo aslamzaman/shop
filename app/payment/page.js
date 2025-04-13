@@ -1,10 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Add from "@/components/payment/Add";
-import Edit from "@/components/payment/Edit";
 import Delete from "@/components/payment/Delete";
 import { getDataFromFirebase } from "@/lib/firebaseFunction";
-import { formatedDate, numberWithCommaISO, sortArray } from "@/lib/utils";
+import { sortArray } from "@/lib/utils";
 
 
 const Payment = () => {
@@ -18,18 +17,21 @@ const Payment = () => {
             setWaitMsg('Please Wait...');
             try {
                 const userId = sessionStorage.getItem('user');
+
                 const [paymentResponse, customerResponse] = await Promise.all([
                     getDataFromFirebase("payment", userId),
                     getDataFromFirebase("customer", userId)
-                ]);
-                const join = paymentResponse.map(payment => {
+                ]); 
+                const result = paymentResponse.map(payment=>{
                     const matchCustomer = customerResponse.find(customer => customer.id === payment.customerId);
-                    return {
+                    return{
                         ...payment,
-                        customer: matchCustomer ? matchCustomer.name : ""
+                        customer: matchCustomer?matchCustomer.name:""
                     }
                 })
-                const sortedData = join.sort((a, b) => sortArray(new Date(b.createdAt), new Date(a.createdAt)));
+
+
+                const sortedData = result.sort((a, b) => sortArray(new Date(b.createdAt), new Date(a.createdAt)));
                 console.log(sortedData);
                 setPayments(sortedData);
                 setWaitMsg('');
@@ -49,7 +51,7 @@ const Payment = () => {
     return (
         <>
             <div className="w-full py-4">
-                <h1 className="w-full text-xl lg:text-3xl font-bold text-center text-blue-700">Payments</h1>
+                <h1 className="w-full text-xl lg:text-3xl font-bold text-center text-blue-700">Payment</h1>
                 <p className="w-full text-center text-blue-300">&nbsp;{waitMsg}&nbsp;</p>
                 <p className="w-full text-sm text-center text-pink-600">&nbsp;{msg}&nbsp;</p>
             </div>
@@ -59,9 +61,10 @@ const Payment = () => {
                 <table className="w-full border border-gray-200">
                     <thead>
                         <tr className="w-full bg-gray-200">
-                            <th className="text-center border-b border-gray-200 px-4 py-1">Customer</th>
+                            <th className="text-center border-b border-gray-200 px-4 py-1">RefNo</th>
+                            <th className="text-start border-b border-gray-200 px-4 py-1">Customer</th>
                             <th className="text-center border-b border-gray-200 px-4 py-1">Date</th>
-                            <th className="text-center border-b border-gray-200 px-4 py-1">Cash/Cheque</th>
+                            <th className="text-center border-b border-gray-200 px-4 py-1">CashType</th>
                             <th className="text-center border-b border-gray-200 px-4 py-1">Amount</th>
                             <th className="font-normal flex justify-end border-b border-gray-200 px-4 py-1">
                                 <Add message={messageHandler} />
@@ -72,21 +75,21 @@ const Payment = () => {
                         {payments.length ? (
                             payments.map(payment => (
                                 <tr className="border-b border-gray-200 hover:bg-gray-100" key={payment.id}>
-                                    <td className="text-center py-1 px-4">{payment.customer}</td>
-                                    <td className="text-center py-1 px-4">{formatedDate(payment.dt)}</td>
-                                    <td className="text-center py-1 px-4">{payment.cash}</td>
-                                    <td className="text-center py-1 px-4">{numberWithCommaISO(payment.amount)}</td>
+                                    <td className="text-center py-1 px-4">{payment.refNo}</td>
+                                    <td className="text-start py-1 px-4">{payment.customer}</td>
+                                    <td className="text-center py-1 px-4">{payment.dt}</td>
+                                    <td className="text-center py-1 px-4">{payment.cashType}</td>
+                                    <td className="text-center py-1 px-4">{payment.amount}</td>
                                     <td className="text-center py-2">
-                                        <div className="h-8 flex justify-end items-center space-x-1 mt-1 mr-2">
-                                            <Edit message={messageHandler} id={payment.id} data={payment} />
-                                            <Delete message={messageHandler} id={payment.id} />
+                                        <div className="h-8 flex justify-end items-center space-x-1 mt-1 mr-5">
+                                            <Delete message={messageHandler} id={payment.id} data={payment} />
                                         </div>
                                     </td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={5} className="text-center py-10 px-4">
+                                <td colSpan={6} className="text-center py-10 px-4">
                                     Data not available.
                                 </td>
                             </tr>

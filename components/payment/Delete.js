@@ -4,8 +4,8 @@ import { deleteDataFromFirebase } from "@/lib/firebaseFunction";
 import LoadingDot from "../LoadingDot";
 
 
-const Delete = ({ message, id }) => {
-
+const Delete = ({ message, id, data }) => {
+    const [refNo, setRefNo] = useState("");
 
     const [show, setShow] = useState(false);
     const [busy, setBusy] = useState(false);
@@ -13,6 +13,8 @@ const Delete = ({ message, id }) => {
 
     const showDeleteForm = () => {
         setShow(true);
+        const { refNo } = data;
+        setRefNo(refNo);
     }
 
 
@@ -30,7 +32,7 @@ const Delete = ({ message, id }) => {
             console.log(error);
             message("Data deleting error");
         } finally {
-           setBusy(false);
+            setBusy(false);
             setShow(false);
         }
     }
@@ -62,6 +64,7 @@ const Delete = ({ message, id }) => {
 
                                 <h1 className="text-sm text-center text-gray-600 mt-4">
                                     Are you sure to proceed with the deletion?</h1>
+                                <h1 className="text-center text-gray-600 font-bold">{refNo}</h1>
                             </div>
                             <div className="w-full mt-4 flex justify-start pointer-events-auto">
                                 <BtnEn Title="Close" Click={closeDeleteForm} Class="bg-pink-700 hover:bg-pink-900 text-white mr-1" />
@@ -80,6 +83,5 @@ const Delete = ({ message, id }) => {
     )
 }
 export default Delete;
-    
 
-    
+
