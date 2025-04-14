@@ -245,7 +245,7 @@ const Purchasesale = () => {
             </div>
 
 
-            <div className="w-full p-4 border-2 border-gray-300 shadow-md rounded-md overflow-auto">
+            <div className="w-full p-4 bg-white border-2 border-gray-300 shadow-md rounded-md overflow-auto">
                 <h1 className="text-start text-2xl font-bold">Stock/Balance</h1>
                 <table className="w-full border border-gray-200">
                     <thead>

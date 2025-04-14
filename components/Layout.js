@@ -166,7 +166,7 @@ const Home = ({ children }) => {
 
 
 
-                <div className='w-full h-[calc(100vh-60px)] px-4 pt-4 pb-[100px] bg-white overflow-auto'>
+                <div className='w-full h-[calc(100vh-60px)] px-4 pt-4 pb-[200px] bg-white overflow-auto  bg-repeat bg-size-[10px]' style={{backgroundImage:"url('/images/logo/shop.jpg')"}}>
                     {children}
                 </div>
             </div>

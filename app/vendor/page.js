@@ -58,7 +58,7 @@ const Vendor = () => {
             </div>
 
 
-            <div className="w-full p-4 border-2 border-gray-300 shadow-md rounded-md overflow-auto">
+            <div className="w-full p-4 bg-white border-2 border-gray-300 shadow-md rounded-md overflow-auto">
                 <table className="w-full border border-gray-200">
                     <thead>
                         <tr className="w-full bg-gray-200">
