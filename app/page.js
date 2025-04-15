@@ -89,7 +89,7 @@ export default function Home() {
 
       <div className="w-full lg:w-1/2 border-2 border-gray-300 rounded-lg shadow-lg">
         <div className="w-full border-b-2  border-gray-300">
-          <h1 className="py-2 text-center text-2xl font-bold">Log In</h1>
+          <h1 className="py-2 text-center text-2xl font-bold">Log In (May be Multiple)</h1>
         </div>
         <div className="px-4 py-2">
           <p className="py-2 text-sm text-center text-red-500">{msg}</p>
