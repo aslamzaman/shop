@@ -1,28 +1,54 @@
 import React, { useState } from "react";
-import { TextEn, BtnSubmit } from "@/components/Form";
-import { updateDataToFirebase } from "@/lib/firebaseFunction";
-import { vendorSchema } from "@/lib/Schema";
+import { BtnSubmit, TextDt, TextNum, DropdownEn, TextEnDisabled } from "@/components/Form";
+import { updateDataToFirebase, getDataFromFirebase } from "@/lib/firebaseFunction";
+import { saleSchema } from "@/lib/Schema";
 import LoadingDot from "../LoadingDot";
+import { formatedDate } from "@/lib/utils";
 
 
 
 const Edit = ({ message, id, data }) => {
-    const [name, setName] = useState('');
-    const [businessName, setBusinessName] = useState('');
-    const [address, setAddress] = useState('');
-    const [mobile, setMobile] = useState('');
+    const [dt, setDt] = useState('');
+    const [customerId, setCustomerId] = useState('');
+    const [productId, setProductId] = useState('');
+    const [shadeNo, setShadeNo] = useState('');
+    const [qty, setQty] = useState('');
+    const [price, setPrice] = useState('');
+    const [yr, setYr] = useState('');
 
 
     const [show, setShow] = useState(false);
     const [busy, setBusy] = useState(false);
 
-    const showEditForm = () => {
+    const [products, setProducts] = useState([]);
+    const [customers, setCustomers] = useState([]);
+
+
+
+    const showEditForm = async () => {
         setShow(true);
-        const { name, businessName, address, mobile } = data;
-        setName(name);
-        setBusinessName(businessName);
-        setAddress(address);
-        setMobile(mobile);
+       
+        try {
+             const [responseProduct, responseCustomer] = await Promise.all([
+                 getDataFromFirebase("product"),
+                 getDataFromFirebase("customer")
+             ]);
+ 
+             setProducts(responseProduct);
+             setCustomers(responseCustomer);
+             console.log("aslam", data)
+            const { dt, customerId,  productId, shadeNo, qty, price, yr } = data;
+            setDt(formatedDate(dt));  
+            setCustomerId(customerId);
+            setProductId(productId);
+            setShadeNo(shadeNo);
+            setQty(qty);
+            setPrice(price);
+            setYr(yr);
+        } catch (error) {
+            console.log(error);
+        }
+
     };
 
 
@@ -36,14 +62,14 @@ const Edit = ({ message, id, data }) => {
         e.preventDefault();
         try {
             setBusy(true);
-            // 4 objects ------
-            const arrayObject = [name, businessName, address, mobile];
-            const data = vendorSchema(arrayObject);
-            const msg = await updateDataToFirebase("vendor", id, data);
+            // 7 objects ------
+            const arrayObject = [dt, customerId,  productId, shadeNo, qty, price, yr];
+            const data = saleSchema(arrayObject);
+            const msg = await updateDataToFirebase("sale", id, data);
             message(msg);
         } catch (error) {
-            console.error("Error saving vendor data:", error);
-            message("Error saving vendor data.");
+            console.error("Error saving sale data:", error);
+            message("Error saving sale data.");
         } finally {
             setBusy(false);
             setShow(false);
@@ -69,10 +95,21 @@ const Edit = ({ message, id, data }) => {
                         <div className="px-4 pb-6 text-black">
                             <form onSubmit={saveHandler} >
                                 <div className="grid grid-cols-1 gap-2 my-4">
-                                    <TextEn Title="Name" Id="name" Change={e => setName(e.target.value)} Value={name} Chr={50} />
-                                    <TextEn Title="Business Name" Id="businessName" Change={e => setBusinessName(e.target.value)} Value={businessName} Chr={50} />
-                                    <TextEn Title="Address" Id="address" Change={e => setAddress(e.target.value)} Value={address} Chr={50} />
-                                    <TextEn Title="Mobile" Id="mobile" Change={e => setMobile(e.target.value)} Value={mobile} Chr={50} />
+                                        <TextDt Title="Date" Id="dt" Change={e => setDt(e.target.value)} Value={dt} />
+
+                                        <DropdownEn Title="Customer" Id="customerId" Change={e => setCustomerId(e.target.value)} Value={customerId}>
+                                            {customers.length ? customers.map(customer => <option value={customer.id} key={customer.id}>{customer.name}-{customer.address}</option>) : null}
+                                        </DropdownEn>
+                                        <DropdownEn Title="Product" Id="productId" Change={e => setProductId(e.target.value)} Value={productId}>
+                                            {products.length ? products.map(product => <option value={product.id} key={product.id}>{product.name}- {product.description}</option>) : null}
+                                        </DropdownEn>
+
+                                        <TextNum Title="Shade No" Id="shadeNo" Change={e => setShadeNo(e.target.value)} Value={shadeNo} />
+
+                                        <TextNum Title="Quantity" Id="qty" Change={e => setQty(e.target.value)} Value={qty} />
+                                        <TextNum Title="Price" Id="price" Change={e => setPrice(e.target.value)} Value={price} />
+
+                                        <TextEnDisabled Title="Year" Id="yr" Change={e => setYr(e.target.value)} Value={yr} />
                                 </div>
                                 <div className="w-full mt-4 flex justify-start pointer-events-auto">
                                     <input type="button" onClick={closeEditForm} value="Close" className="bg-pink-600 hover:bg-pink-800 text-white text-center mt-3 mx-0.5 px-4 py-2 font-semibold rounded-md focus:ring-1 ring-blue-200 ring-offset-2 duration-300 cursor-pointer" />

@@ -13,31 +13,29 @@ const Purchase = () => {
     const [waitMsg, setWaitMsg] = useState("");
     const [msg, setMsg] = useState("Data ready");
 
-
     useEffect(() => {
         const getData = async () => {
             setWaitMsg('Please Wait...');
             try {
-                const userId = sessionStorage.getItem('user');
-                const [purchaseResponse, productResponse, vendorResponse, saleResponse] = await Promise.all([
-                    getDataFromFirebase("purchase", userId),
-                    getDataFromFirebase("product", userId),
-                    getDataFromFirebase("vendor", userId),
-                    getDataFromFirebase("sale", userId)
+                const year = sessionStorage.getItem('y');
+                const [purchaseResponse, productResponse, vendorResponse] = await Promise.all([
+                    getDataFromFirebase("purchase"),
+                    getDataFromFirebase("product"),
+                    getDataFromFirebase("vendor")
                 ]);
                 const join = purchaseResponse.map(purchase => {
                     const matchProduct = productResponse.find(p => p.id === purchase.productId);
                     const matchVendor = vendorResponse.find(v => v.id === purchase.vendorId);
-                    const matchSale = saleResponse.filter(s => s.purchaseId === purchase.id);
                     return {
                         ...purchase,
                         product: matchProduct ? `${matchProduct.name}- ${matchProduct.description}` : "",
-                        vendor: matchVendor ? matchVendor.name : "",
-                        isUpdatable: matchSale.length > 0 ? false : true
+                        vendor: matchVendor ? matchVendor.name : ""
                     }
                 })
                 console.log(join)
-                const sortedData = join.sort((a, b) => sortArray(new Date(b.createdAt), new Date(a.createdAt)));
+                const purchaseByYear = join.filter(p => p.yr === Number(year))
+                console.log(purchaseByYear)
+                const sortedData = purchaseByYear.sort((a, b) => sortArray(new Date(b.createdAt), new Date(a.createdAt)));
                 console.log(sortedData);
                 setPurchases(sortedData);
                 setWaitMsg('');
@@ -63,40 +61,46 @@ const Purchase = () => {
             </div>
 
 
+
+
             <div className="w-full p-4 mt-8 bg-white border-2 border-gray-300 shadow-md rounded-md overflow-auto">
                 <table className="w-full border border-gray-200">
                     <thead>
                         <tr className="w-full bg-gray-200">
-                            <th className="text-start border-b border-gray-200 px-4 py-1">Product</th>
-                            <th className="text-start border-b border-gray-200 px-4 py-1">Vendor</th>
                             <th className="text-center border-b border-gray-200 px-4 py-1">Date</th>
-                            <th className="text-center border-b border-gray-200 px-4 py-1">Quantity</th>
-                            <th className="text-center border-b border-gray-200 px-4 py-1">PurchasePrice</th>
-                            <th className="text-center border-b border-gray-200 px-4 py-1">SalePrice</th>
-                            <th className="text-center border-b border-gray-200 px-4 py-1">Tax(%)</th>
+                            <th className="text-center border-b border-gray-200 px-4 py-1">Shipment</th>
+                            <th className="text-start border-b border-gray-200 px-4 py-1">Vendor</th>
+                            <th className="text-start border-b border-gray-200 px-4 py-1">Product</th>
+                            <th className="text-center border-b border-gray-200 px-4 py-1">Shade No</th>
+                            <th className="text-end border-b border-gray-200 px-4 py-1">Quantity</th>
+                            <th className="text-end border-b border-gray-200 px-4 py-1">Price</th>
+                            <th className="text-end border-b border-gray-200 px-4 py-1">Total</th>
                             <th className="font-normal flex justify-end border-b border-gray-200 px-4 py-1">
                                 <Add message={messageHandler} />
                             </th>
                         </tr>
                     </thead>
                     <tbody>
-                        {purchases.length ? (
+                        {purchases.length ? (                            
                             purchases.map(purchase => (
                                 <tr className="border-b border-gray-200 hover:bg-gray-100" key={purchase.id}>
-                                    <td className="text-start py-1 px-4">{purchase.product}</td>
-                                    <td className="text-start py-1 px-4">{purchase.vendor}</td>
                                     <td className="text-center py-1 px-4">{purchase.dt}</td>
-                                    <td className="text-center py-1 px-4">{purchase.qty}</td>
-                                    <td className="text-center py-1 px-4">{purchase.purchasePrice}</td>
-                                    <td className="text-center py-1 px-4">{purchase.salePrice}</td>
-                                    <td className="text-center py-1 px-4">{purchase.tax}</td>
-                                    <td className="text-center py-2">
-                                        {purchase.isUpdatable ? (
-                                            <div className="h-8 flex justify-end items-center space-x-1 mt-1 mr-2">
-                                                <Edit message={messageHandler} id={purchase.id} data={purchase} />
-                                                <Delete message={messageHandler} id={purchase.id} data={purchase} />
-                                            </div>
-                                        ) : null}
+                                    <td className="text-center py-1 px-4">{purchase.shipment}</td>
+                                    <td className="text-start py-1 px-4">{purchase.vendor}</td>
+                                    <td className="text-start py-1 px-4">{purchase.product}</td>
+                                    <td className="text-center py-1 px-4">{purchase.shadeNo}</td>
+                                    <td className="text-end py-1 px-4">{(purchase.qty).toFixed(2)}</td>
+                                    <td className="text-end py-1 px-4">{(purchase.price).toFixed(2)}</td>
+                                    <td className="text-end py-1 px-4">
+                                        {
+                                        (purchase.qty * purchase.price).toFixed(2)
+                                        }
+                                    </td>
+                                    <td className="text-center py-2">                                 
+                                        <div className="h-8 flex justify-end items-center space-x-1 mt-1 mr-2">
+                                            <Edit message={messageHandler} id={purchase.id} data={purchase} />
+                                            <Delete message={messageHandler} id={purchase.id} data={purchase} />
+                                        </div>                                     
                                     </td>
                                 </tr>
                             ))

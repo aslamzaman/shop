@@ -1,58 +1,10 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Add from "@/components/sale/Add";
-import { getDataFromFirebase } from "@/lib/firebaseFunction";
-import { formatedDate, numberWithCommaISO, sortArray } from "@/lib/utils";
+import Edit from "@/components/sale/Edit";
 import Delete from "@/components/sale/Delete";
-
-
-const getSale = async () => {
-    const userId = sessionStorage.getItem('user');
-    const [purchaseResponse, saleResponse, customerResponse] = await Promise.all([
-        getDataFromFirebase("purchase", userId),
-        getDataFromFirebase("sale", userId),
-        getDataFromFirebase("customer", userId)
-    ]);
-    const join = saleResponse.map(sale => {
-        const matchPurchase = purchaseResponse.find(p => p.id === sale.purchaseId);
-        const matchCustomer = customerResponse.find(c => c.id === sale.customerId);
-        return {
-            ...sale,
-            matchPurchase,
-            customer: matchCustomer ? matchCustomer.name : ''
-        }
-    })
-
-
-    // -------- Unique invoice -----------------
-    const saleInvoice = join.map(item => item.invoice);
-    const uniqueInvoices = [...new Set(saleInvoice)];
-
-
-    // -------- Get sales in group -----------------
-    const result = uniqueInvoices.map(invoice => {
-        const matchSale = join.filter(s => s.invoice === invoice);
-        const totalSale = matchSale.reduce((t, c) => t + (c.qty * c.matchPurchase.salePrice), 0);
-        const totalTax = matchSale.reduce((t, c) => t + ((c.qty * c.matchPurchase.salePrice) * (c.matchPurchase.tax / 100)), 0);
-        const totalPayment = matchSale.reduce((t, c) => t + c.payment, 0);
-        const totalDeduct = matchSale.reduce((t, c) => t + c.deduct, 0);
-        const balance = (totalSale + totalTax) - (totalPayment + totalDeduct);
-        const ids = matchSale.map(s => s.id);
-        return {
-            invoice,
-            customer: matchSale[0].customer,
-            totalSale,
-            totalTax,
-            totalPayment,
-            totalDeduct,
-            balance,
-            dt: matchSale[0].dt,
-            ids
-        }
-    })
-    const sortedData = result.sort((a, b) => sortArray(Number(b.invoice), Number(a.invoice)));
-    return sortedData;
-}
+import { getDataFromFirebase } from "@/lib/firebaseFunction";
+import { sortArray } from "@/lib/utils";
 
 
 
@@ -66,9 +18,27 @@ const Sale = () => {
         const getData = async () => {
             setWaitMsg('Please Wait...');
             try {
-                const newData = await getSale();
-                console.log({ newData });
-                setSales(newData);
+                const year = sessionStorage.getItem('y');
+                const [saleResponse, customerResponse, productResponse] = await Promise.all([
+                    getDataFromFirebase("sale"),
+                    getDataFromFirebase("customer"),
+                    getDataFromFirebase("product")
+                ]);
+                const join = saleResponse.map(sale => {
+                    const matchCustomer = customerResponse.find(c => c.id === sale.customerId);
+                    const matchProduct = productResponse.find(pr => pr.id === sale.productId);
+                    return {
+                        ...sale,
+                        customer: matchCustomer ? matchCustomer.name : '',
+                        product: matchProduct ? matchProduct.name : ''
+                    }
+                })
+                console.log(join)
+                const saleByYear = join.filter(s => s.yr === Number(year))
+                console.log(saleByYear)
+                const sortedData = saleByYear.sort((a, b) => sortArray(new Date(b.dt), new Date(a.dt)));
+                console.log(sortedData);
+                setSales(sortedData);
                 setWaitMsg('');
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -88,51 +58,56 @@ const Sale = () => {
     return (
         <>
             <div className="w-full py-4">
-                <h1 className="w-full text-xl lg:text-3xl font-bold text-center text-blue-700">Sales</h1>
+                <h1 className="w-full text-xl lg:text-3xl font-bold text-center text-blue-700">Sale</h1>
                 <p className="w-full text-center text-blue-300">&nbsp;{waitMsg}&nbsp;</p>
                 <p className="w-full text-sm text-center text-pink-600">&nbsp;{msg}&nbsp;</p>
             </div>
 
 
+
+
             <div className="w-full p-4 mt-8 bg-white border-2 border-gray-300 shadow-md rounded-md overflow-auto">
                 <table className="w-full border border-gray-200">
                     <thead>
-                        <tr className="w-full bg-gray-200">
-                            <th className="text-center border-b border-gray-200 px-4 py-1">Invoice</th>
-                            <th className="text-start border-b border-gray-200 px-4 py-1">Customer</th>
+                        <tr className="w-full bg-gray-200">                           
                             <th className="text-center border-b border-gray-200 px-4 py-1">Date</th>
-                            <th className="text-end border-b border-gray-200 px-4 py-1">SaleAmount</th>
-                            <th className="text-end border-b border-gray-200 px-4 py-1">Tax</th>
-                            <th className="text-end border-b border-gray-200 px-4 py-1">Payment</th>
-                            <th className="text-end border-b border-gray-200 px-4 py-1">Discount</th>
-                            <th className="text-end border-b border-gray-200 px-4 py-1">Balance/Dues</th>
+                            <th className="text-start border-b border-gray-200 px-4 py-1">Customer</th>
+                            <th className="text-start border-b border-gray-200 px-4 py-1">Product</th>
+                            <th className="text-center border-b border-gray-200 px-4 py-1">Shade No</th>
+                            <th className="text-end border-b border-gray-200 px-4 py-1">Quantity</th>
+                            <th className="text-end border-b border-gray-200 px-4 py-1">Price</th>
+                            <th className="text-end border-b border-gray-200 px-4 py-1">Total</th>
                             <th className="font-normal flex justify-end border-b border-gray-200 px-4 py-1">
                                 <Add message={messageHandler} />
                             </th>
                         </tr>
                     </thead>
                     <tbody>
-                        {sales.length ? (
+                        {sales.length ? (                            
                             sales.map(sale => (
-                                <tr className="border-b border-gray-200 hover:bg-gray-100" key={sale.invoice}>
-                                    <td className="text-center py-1 px-4">{sale.invoice}</td>
+                                <tr className="border-b border-gray-200 hover:bg-gray-100" key={sale.id}>
+                                    <td className="text-center py-1 px-4">{sale.dt}</td>
                                     <td className="text-start py-1 px-4">{sale.customer}</td>
-                                    <td className="text-center py-1 px-4">{formatedDate(sale.dt)}</td>
-                                    <td className="text-end py-1 px-4">{numberWithCommaISO(sale.totalSale)}</td>
-                                    <td className="text-end py-1 px-4">{numberWithCommaISO(sale.totalTax)}</td>
-                                    <td className="text-end py-1 px-4">{numberWithCommaISO(sale.totalPayment)}</td>
-                                    <td className="text-end py-1 px-4">{numberWithCommaISO(sale.totalDeduct)}</td>
-                                    <td className="text-end py-1 px-4">{numberWithCommaISO(sale.balance)}</td>
-                                    <td className="text-center py-2">
-                                        <div className="h-8 flex justify-end items-center space-x-1 mt-1 mr-5">
-                                      <Delete message={messageHandler} ids={sale.ids} />
-                                        </div>
+                                    <td className="text-start py-1 px-4">{sale.product}</td>
+                                    <td className="text-center py-1 px-4">{sale.shadeNo}</td>
+                                    <td className="text-end py-1 px-4">{(sale.qty).toFixed(2)}</td>
+                                    <td className="text-end py-1 px-4">{(sale.price).toFixed(2)}</td>
+                                    <td className="text-end py-1 px-4">
+                                        {
+                                        (sale.qty * sale.price).toFixed(2)
+                                        }
+                                    </td>
+                                    <td className="text-center py-2">                                 
+                                        <div className="h-8 flex justify-end items-center space-x-1 mt-1 mr-2">
+                                            <Edit message={messageHandler} id={sale.id} data={sale} />
+                                            <Delete message={messageHandler} id={sale.id} data={sale} />
+                                        </div>                                     
                                     </td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={9} className="text-center py-10 px-4">
+                                <td colSpan={8} className="text-center py-10 px-4">
                                     Data not available.
                                 </td>
                             </tr>

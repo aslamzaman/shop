@@ -1,19 +1,20 @@
 import React, { useState } from "react";
-import { BtnSubmit, TextDt, TextNum, DropdownEn } from "@/components/Form";
+import { BtnSubmit, TextDt, TextNum, DropdownEn, TextEnDisabled } from "@/components/Form";
 import { addDataToFirebase, getDataFromFirebase } from "@/lib/firebaseFunction";
 import { purchaseSchema } from "@/lib/Schema";
 import LoadingDot from "../LoadingDot";
 import { formatedDate } from "@/lib/utils";
 
+
 const Add = ({ message }) => {
-    const [productId, setProductId] = useState('');
-    const [vendorId, setVendorId] = useState('');
     const [dt, setDt] = useState('');
+    const [shipment, setShipment] = useState('');
+    const [vendorId, setVendorId] = useState('');
+    const [productId, setProductId] = useState('');
+    const [shadeNo, setShadeNo] = useState('');
     const [qty, setQty] = useState('');
-    const [purchasePrice, setPurchasePrice] = useState('');
-    const [salePrice, setSalePrice] = useState('');
-    const [tax, setTax] = useState('');
-    const [userId, setUserId] = useState('');
+    const [price, setPrice] = useState('');
+    const [yr, setYr] = useState('');
 
 
     const [show, setShow] = useState(false);
@@ -29,10 +30,9 @@ const Add = ({ message }) => {
         resetVariables();
 
         try {
-            const userId = sessionStorage.getItem('user');
             const [responseProduct, responseVendor] = await Promise.all([
-                getDataFromFirebase("product", userId),
-                getDataFromFirebase("vendor", userId)
+                getDataFromFirebase("product"),
+                getDataFromFirebase("vendor")
             ]);
 
             setVendors(responseVendor);
@@ -47,17 +47,16 @@ const Add = ({ message }) => {
         setShow(false);
     }
 
-
     const resetVariables = () => {
-        const userId = sessionStorage.getItem('user');
-        setProductId('');
-        setVendorId('');
+        const year = sessionStorage.getItem('y');
         setDt(formatedDate(new Date()));
+        setShipment('');
+        setVendorId('');
+        setProductId('');
+        setShadeNo('');
         setQty('');
-        setPurchasePrice('');
-        setSalePrice('');
-        setTax('');
-        setUserId(userId);
+        setPrice('');
+        setYr(year);
     }
 
 
@@ -67,7 +66,7 @@ const Add = ({ message }) => {
         try {
             setBusy(true);
             // 8 objects ------
-            const arrayObject = [productId, vendorId, dt, qty, purchasePrice, salePrice, tax, userId];
+            const arrayObject = [dt, shipment, vendorId, productId, shadeNo, qty, price, yr];
             const data = purchaseSchema(arrayObject);
             const msg = await addDataToFirebase("purchase", data);
             message(msg);
@@ -95,25 +94,30 @@ const Add = ({ message }) => {
                                 </svg>
                             </button>
                         </div>
+
                         <div className="p-4 border-0 text-black">
                             <div className="w-full overflow-auto">
                                 <div className="p-4">
                                     <form onSubmit={saveHandler}>
                                         <div className="grid grid-cols-1 gap-4">
 
-                                            <DropdownEn Title="Product" Id="productId" Change={e => setProductId(e.target.value)} Value={productId}>
-                                                {products.length ? products.map(product => <option value={product.id} key={product.id}>{product.name}- {product.description}</option>) : null}
-                                            </DropdownEn>
+                                            <TextDt Title="Date" Id="dt" Change={e => setDt(e.target.value)} Value={dt} />
+                                            <TextNum Title="Shipment" Id="shipment" Change={e => setShipment(e.target.value)} Value={shipment} />
 
                                             <DropdownEn Title="Vendor" Id="vendorId" Change={e => setVendorId(e.target.value)} Value={vendorId}>
                                                 {vendors.length ? vendors.map(vendor => <option value={vendor.id} key={vendor.id}>{vendor.name}-{vendor.address}</option>) : null}
                                             </DropdownEn>
 
-                                            <TextDt Title="Date" Id="dt" Change={e => setDt(e.target.value)} Value={dt} />
+                                            <DropdownEn Title="Product" Id="productId" Change={e => setProductId(e.target.value)} Value={productId}>
+                                                {products.length ? products.map(product => <option value={product.id} key={product.id}>{product.name}- {product.description}</option>) : null}
+                                            </DropdownEn>
+
+                                            <TextNum Title="Shade No" Id="shadeNo" Change={e => setShadeNo(e.target.value)} Value={shadeNo} />
+
                                             <TextNum Title="Quantity" Id="qty" Change={e => setQty(e.target.value)} Value={qty} />
-                                            <TextNum Title="Purchase Price" Id="purchasePrice" Change={e => setPurchasePrice(e.target.value)} Value={purchasePrice} />
-                                            <TextNum Title="Sale Price" Id="salePrice" Change={e => setSalePrice(e.target.value)} Value={salePrice} />
-                                            <TextNum Title="Tax (%)" Id="tax" Change={e => setTax(e.target.value)} Value={tax} />
+                                            <TextNum Title="Price" Id="price" Change={e => setPrice(e.target.value)} Value={price} />
+
+                                            <TextEnDisabled Title="Year" Id="yr" Change={e => setYr(e.target.value)} Value={yr} />
 
                                         </div>
                                         <div className="w-full mt-4 flex justify-start pointer-events-auto">

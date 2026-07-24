@@ -77,6 +77,7 @@ const MenuData = [
 const Home = ({ children }) => {
     const [menuPos, setMenuPos] = useState("left-[-100vw]");
     const [userName, setUserName] = useState("");
+    const [yr, setYr] = useState("");
     const router = useRouter(null);
     const posFull = "left-0 right-0";
     const posLeft = "left-[-100vw]";
@@ -84,10 +85,9 @@ const Home = ({ children }) => {
 
 
     useEffect(() => {
-        const sessionData = sessionStorage.getItem('user');
-        const name = sessionStorage.getItem('userName');
-        setUserName(name);
-        if (!sessionData) {
+        const sessionDataUser = sessionStorage.getItem('u');
+          setUserName(sessionDataUser);
+        if (!sessionDataUser) {
             router.push("/");
         }
         window.addEventListener("resize", () => setMenuPos(posLeft));

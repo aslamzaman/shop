@@ -18,20 +18,8 @@ const Product = () => {
             setWaitMsg('Please Wait...');
             try {
 
-                const userId = sessionStorage.getItem('user');
-                const [productResponse, purchaseResponse] = await Promise.all([
-                    getDataFromFirebase("product", userId),
-                    getDataFromFirebase("purchase", userId)
-                ]);
-
-                const productUpdateCheck = productResponse.map(product => {
-                    const matchPurchase = purchaseResponse.filter(purchase => purchase.productId === product.id);
-                    return {
-                        ...product,
-                        isUpdatable: matchPurchase.length > 0 ? false : true
-                    }
-                })
-                const sortedData = productUpdateCheck.sort((a, b) => sortArray(new Date(b.createdAt), new Date(a.createdAt)));
+               const productResponse = await getDataFromFirebase("product");
+                const sortedData = productResponse.sort((a, b) => sortArray(a.name, b.name));
                 console.log(sortedData);
                 setProducts(sortedData);
                 setWaitMsg('');
@@ -74,13 +62,11 @@ const Product = () => {
                                 <tr className="border-b border-gray-200 hover:bg-gray-100" key={product.id}>
                                     <td className="text-start py-1 px-4">{product.name}</td>
                                     <td className="text-start py-1 px-4">{product.description}</td>
-                                    <td className="text-center py-2">
-                                        {product.isUpdatable ? (
-                                            <div className="h-8 flex justify-end items-center space-x-1 mt-1 mr-2">
-                                                <Edit message={messageHandler} id={product.id} data={product} />
-                                                <Delete message={messageHandler} id={product.id} data={product} />
-                                            </div>
-                                        ) : null}
+                                    <td className="text-center py-2">               
+                                        <div className="h-8 flex justify-end items-center space-x-1 mt-1 mr-2">
+                                            <Edit message={messageHandler} id={product.id} data={product} />
+                                            <Delete message={messageHandler} id={product.id} data={product} />
+                                        </div>
                                     </td>
                                 </tr>
                             ))

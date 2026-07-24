@@ -9,7 +9,6 @@ import LoadingDot from "../LoadingDot";
 const Edit = ({ message, id, data }) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    const [userId, setUserId] = useState('');
 
 
     const [show, setShow] = useState(false);
@@ -17,10 +16,9 @@ const Edit = ({ message, id, data }) => {
 
     const showEditForm = () => {
         setShow(true);
-        const { name, description, userId } = data;
+        const { name, description } = data;
         setName(name);
         setDescription(description);
-        setUserId(userId);
     };
 
 
@@ -35,7 +33,7 @@ const Edit = ({ message, id, data }) => {
         try {
             setBusy(true);
             // 3 objects ------
-            const arrayObject = [name, description, userId];
+            const arrayObject = [name, description];
             const data = productSchema(arrayObject);
             const msg = await updateDataToFirebase("product", id, data);
             message(msg);

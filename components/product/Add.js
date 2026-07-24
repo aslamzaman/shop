@@ -7,8 +7,6 @@ import LoadingDot from "../LoadingDot";
 const Add = ({ message }) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    const [userId, setUserId] = useState('');
-
 
     const [show, setShow] = useState(false);
     const [busy, setBusy] = useState(false);
@@ -25,10 +23,8 @@ const Add = ({ message }) => {
 
 
     const resetVariables = () => {
-        const userId = sessionStorage.getItem('user');
         setName('');
         setDescription('');
-        setUserId(userId);
     }
 
 
@@ -38,7 +34,7 @@ const Add = ({ message }) => {
         try {
             setBusy(true);
             // 3 objects ------
-            const arrayObject = [name, description, userId];
+            const arrayObject = [name, description];
             const data = productSchema(arrayObject);
             const msg = await addDataToFirebase("product", data);
             message(msg);

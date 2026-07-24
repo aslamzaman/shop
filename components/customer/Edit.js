@@ -8,10 +8,10 @@ import LoadingDot from "../LoadingDot";
 
 const Edit = ({ message, id, data }) => {
     const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
+    const [businessName, setBusinessName] = useState('');
     const [address, setAddress] = useState('');
-    const [phone, setPhone] = useState('');
-    const [userId, setUserId] = useState('');
+    const [mobile, setMobile] = useState('');
+
 
 
     const [show, setShow] = useState(false);
@@ -19,12 +19,11 @@ const Edit = ({ message, id, data }) => {
 
     const showEditForm = () => {
         setShow(true);
-        const { name, email, address, phone, userId } = data;
+        const { name, businessName, address, mobile } = data;
         setName(name);
-        setEmail(email);
+        setBusinessName(businessName);
         setAddress(address);
-        setPhone(phone);
-        setUserId(userId);
+        setMobile(mobile);
     };
 
 
@@ -38,8 +37,8 @@ const Edit = ({ message, id, data }) => {
         e.preventDefault();
         try {
             setBusy(true);
-            // 5 objects ------
-            const arrayObject = [name, email, address, phone, userId];
+            // 4 objects ------
+            const arrayObject = [name, businessName, address, mobile];
             const data = customerSchema(arrayObject);
             const msg = await updateDataToFirebase("customer", id, data);
             message(msg);
@@ -72,9 +71,9 @@ const Edit = ({ message, id, data }) => {
                             <form onSubmit={saveHandler} >
                                 <div className="grid grid-cols-1 gap-2 my-4">
                                     <TextEn Title="Name" Id="name" Change={e => setName(e.target.value)} Value={name} Chr={50} />
-                                    <TextEn Title="Email" Id="email" Change={e => setEmail(e.target.value)} Value={email} Chr={50} />
+                                    <TextEn Title="Business Name" Id="businessName" Change={e => setBusinessName(e.target.value)} Value={businessName} Chr={50} />
                                     <TextEn Title="Address" Id="address" Change={e => setAddress(e.target.value)} Value={address} Chr={50} />
-                                    <TextEn Title="Phone" Id="phone" Change={e => setPhone(e.target.value)} Value={phone} Chr={50} />
+                                    <TextEn Title="Mobile" Id="phone" Change={e => setMobile(e.target.value)} Value={mobile} Chr={50} />
                                 </div>
                                 <div className="w-full mt-4 flex justify-start pointer-events-auto">
                                     <input type="button" onClick={closeEditForm} value="Close" className="bg-pink-600 hover:bg-pink-800 text-white text-center mt-3 mx-0.5 px-4 py-2 font-semibold rounded-md focus:ring-1 ring-blue-200 ring-offset-2 duration-300 cursor-pointer" />
