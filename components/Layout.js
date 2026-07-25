@@ -37,38 +37,12 @@ const MenuData = [
                 label: 'Sales',
                 url: '/sale'
             },
-            {
-                label: 'Payments',
-                url: '/payment'
-            }
-        ]
-    },
-    {
-        title: 'Dues/Balance',
-        group: [
-            {
+                       {
                 label: 'Stock/Balance',
                 url: '/stockbalance'
-            },
-            {
-                label: 'Customers dues',
-                url: '/customerdues'
-            },
-        ]
-    },
-    {
-        title: 'Bills & Receipt',
-        group: [
-            {
-                label: 'Invoice',
-                url: '/invoice'
-            },
-            {
-                label: 'Money Receipt',
-                url: '/moneyreceipt'
             }
         ]
-    },
+    }
 
 ]
 

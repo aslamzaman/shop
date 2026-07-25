@@ -54,7 +54,7 @@ const Customer = () => {
                     <thead>
                         <tr className="w-full bg-gray-200">
                             <th className="text-start border-b border-gray-200 px-4 py-1">Name</th>
-                            <th className="text-start border-b border-gray-200 px-4 py-1">B.Name</th>
+                            <th className="text-start border-b border-gray-200 px-4 py-1">Business Name</th>
                             <th className="text-start border-b border-gray-200 px-4 py-1">Address</th>
                             <th className="text-center border-b border-gray-200 px-4 py-1">Mobile</th>
                             <th className="font-normal flex justify-end border-b border-gray-200 px-4 py-1">
