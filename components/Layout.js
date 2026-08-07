@@ -42,7 +42,21 @@ const MenuData = [
                 url: '/stockbalance'
             }
         ]
+    },
+    {
+        title: 'Reports & Others',
+        group: [
+            {
+                label: 'New Invoice',
+                url: '/invoice'
+            },
+            {
+                label: 'Invoice List',
+                url: '/invoice_list'
+            }
+        ]
     }
+
 
 ]
 

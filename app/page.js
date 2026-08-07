@@ -7,6 +7,8 @@ import { collection, getDocs } from 'firebase/firestore';
 const yearsList = [2025,2026,2027,2028,2029,2030,2031]
 
 
+
+
 export default function Home() {
   const [users, setUsers] = useState([]);
   const [user, setUser] = useState("");
@@ -28,6 +30,7 @@ export default function Home() {
                 }
             })
             setUsers(data);
+            console.log(data)
           } catch (error) {
               console.error("Error fetching data:", error);
               return [];

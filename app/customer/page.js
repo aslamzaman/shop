@@ -7,7 +7,6 @@ import { getDataFromFirebase } from "@/lib/firebaseFunction";
 import { sortArray } from "@/lib/utils";
 
 
-
 const Customer = () => {
     const [customers, setCustomers] = useState([]);
     const [waitMsg, setWaitMsg] = useState("");
@@ -47,7 +46,7 @@ const Customer = () => {
                 <p className="w-full text-center text-blue-300">&nbsp;{waitMsg}&nbsp;</p>
                 <p className="w-full text-sm text-center text-pink-600">&nbsp;{msg}&nbsp;</p>
             </div>
-    
+
 
             <div className="w-full p-4 mt-8 bg-white border-2 border-gray-300 shadow-md rounded-md overflow-auto">
                 <table className="w-full border border-gray-200">

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { TextEn, BtnSubmit } from "@/components/Form";
 import { addDataToFirebase } from "@/lib/firebaseFunction";
-import { customerSchema } from "@/lib/Schema";
+import { customerSchema, productSchema } from "@/lib/Schema";
 import LoadingDot from "../LoadingDot";
 
 
@@ -40,7 +40,7 @@ const Add = ({ message }) => {
             setBusy(true);
             // 4 objects ------
             const arrayObject = [name, businessName, address, mobile];
-            const data = customerSchema(arrayObject);
+            const data = productSchema(arrayObject);
             const msg = await addDataToFirebase("customer", data);
             message(msg);
         } catch (error) {
@@ -67,6 +67,7 @@ const Add = ({ message }) => {
                                 </svg>
                             </button>
                         </div>
+                        
                         <div className="p-4 border-0 text-black">
                             <div className="w-full overflow-auto">
                                 <div className="p-4">

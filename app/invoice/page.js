@@ -1,180 +1,259 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { formatedDateDot, numberWithComma, inwordEnglish } from "@/lib/utils";
-import { getDataFromFirebase } from "@/lib/firebaseFunction";
+import React, { useState, useEffect } from "react";
+import Add from "@/components/invoice/Add";
+import Edit from "@/components/invoice/Edit";
+import Delete from "@/components/invoice/Delete";
+import { getDataFromFirebase, addDataToFirebase } from "@/lib/firebaseFunction";
+import { localStorageAddItem, localStorageGetItem } from "@/lib/DatabaseLocalStorage";
+import { formatedDate, numberWithComma } from "@/lib/utils";
+import { BtnSubmit, TextEn, DropdownEn, TextNum, BtnEn } from "@/components/Form";
+import { invoicePDFSchema } from "@/lib/Schema";
+import { invoicePDFPrint } from "@/lib/invoicePrint";
 
-import { jsPDF } from "jspdf";
+const setInvoiceNumber = () => {
+    const invoiceNumber = localStorage.getItem("invoiceNumber");
+    const invoiceDate = localStorage.getItem("dt");
+
+    if (!invoiceNumber || !invoiceDate) {
+        const newInvoice = parseInt(Date.now());
+        const newDate = formatedDate(new Date());
+
+        localStorage.setItem("invoiceNumber", newInvoice);
+        localStorage.setItem("dt", newDate);
+
+        return [newInvoice, newDate];
+    } else {
+        return [invoiceNumber, invoiceDate];
+    }
+}
+
 
 
 const Invoice = () => {
+    const [invoices, setInvoices] = useState([]);
+    const [waitMsg, setWaitMsg] = useState("");
+    const [msg, setMsg] = useState("");
+    const [newMsg, setNewMsg] = useState("");
+
+    const [invoice, setInvoice] = useState("");
+    const [dt, setDt] = useState("");
+    const [yr, setYr] = useState("");
+
+
+
     const [customers, setCustomers] = useState([]);
+    const [customerId, setCustomerId] = useState('');
+
+
+    const [payment, setPament] = useState("0");
+    const [deduct, setDeduct] = useState("0");
+    const [subTotal, setSubTotal] = useState("0");
+
+
     const [products, setProducts] = useState([]);
+    const [remoteInvoice, setRemoteInvoice] = useState([]);
 
     useEffect(() => {
-        const getData = async () => {
+        const load = async () => {
+            setWaitMsg('Please Wait...');
             try {
-                const [customerResponse, productResponse] = await Promise.all([
+                const localYr = sessionStorage.getItem("y");
+                setYr(localYr);
+
+                const [customerResponse, productResponse, invoiceResponse] = await Promise.all([
                     getDataFromFirebase("customer"),
-                    getDataFromFirebase("product")
+                    getDataFromFirebase("product"),
+                    getDataFromFirebase("invoice")
                 ]);
                 setCustomers(customerResponse);
                 setProducts(productResponse);
+                setRemoteInvoice(invoiceResponse);
+
+                //-----------------------------------
+
+
+                const data = localStorageGetItem("invoice");
+                const dataJoining = data.map(item => {
+                    const matchProduct = productResponse.find(p => p.id === `${item.productId}`);
+                    console.log(matchProduct)
+                    return {
+                        ...item,
+                        name: matchProduct ? matchProduct.name : " "
+                    }
+                })
+                const subTotalTaka = dataJoining.reduce((t, c) => t + (c.qty * c.price), 0);
+                const result = dataJoining.sort((a, b) => parseInt(b.id) > parseInt(a.id) ? 1 : -1);
+                setInvoices(result);
+                setSubTotal(subTotalTaka)
+                setWaitMsg('');
+                console.log(result)
+
+                // ---------------------------
+
+                const [invoiceNum, invoiceDt] = setInvoiceNumber();
+                setInvoice(invoiceNum)
+                setDt(invoiceDt)
             } catch (error) {
-                console.error("Error fetching data:", error);
+                console.log(error);
             }
         };
-
-        getData();
-    }, []);
-
+        load();
+    }, [msg]);
 
 
-    const clickMe = (e) => {
-        e.preventDefault();
-
-        const doc = new jsPDF({
-            orientation: 'p',
-            unit: 'mm',
-            format: 'a4',
-            putOnlyUsedFonts: true,
-            floatPrecision: 16 // or "smart", default is 16
-        });
-
-        const prinDate = new Date();
-        const dtText = `Print Data: ${formatedDateDot(prinDate)}`
-
-        const invoice = {
-            invoiceNo: 29759231,
-            dt: "2026-04-22",
-            customerId: "P0xIexrAbcHWdLwvRsbg",
-            payment: 5000,
-            deduct: 150,
-            yr: 2026,
-            products: [
-                {
-                    productId: "ASSFetz55QlLqR1Vfd2k",
-                    thn: 1,
-                    qty: 13,
-                    price: 300
-                },
-                {
-                    productId: "RtkQIVwSlPvZ7wfM17Um",
-                    thn: 2,
-                    qty: 26,
-                    price: 370
-                },
-                {
-                    productId: "kbBAI5MtdWRuVmBkRh1e",
-                    thn: 1,
-                    qty: 10,
-                    price: 335
-                }
-            ],
-        }
-        console.log(invoice)
-        const customer = customers.find(c => c.id === invoice.customerId);
-        console.log(customer)  //---------------------------------------
-
-        const productList = invoice.products;
-        const productData = productList.map(p => {
-            const matchProduct = products.find(item => item.id === p.productId);
-            return {
-                name: matchProduct.name,
-                thn: p.thn,
-                qty: p.qty,
-                price: p.price
-            }
-        })
-        console.log(productData); //---------------------------------------
-        doc.setFont("times", "bold");
-        doc.setFontSize(18);
-
-
-        let y = 50;
-        doc.text("BILL/INVOICE", 105, y, { maxWidth: doc.getTextWidth("BILL/INVOICE").toFixed(0), align: 'center' });
-
-
-        doc.setFont("times", "normal");
-        doc.setFontSize(12);
-        doc.text(dtText, 105, y + 4, { align: 'center' });
-
-        y += 20;
-
-        doc.text(customer["name"], 22, y + 5, { align: 'left' });
-        doc.text(customer["address"], 22, y + 10, { align: 'left' });
-        doc.text(customer["mobile"], 22, y + 15, { align: 'left' });
-
-        doc.text(`Invoice No: ${invoice["invoiceNo"]}`, 188, y + 5, { align: 'right' });
-        doc.text(`Invoice Date: ${invoice["dt"]}`, 188, y + 10, { align: 'right' });
-
-
-
-        doc.setFont("times", "bold");
-        y += 30;
-        doc.line(20, y + 1.5, 190, y + 1.5);
-        doc.text("PRODUCT NAME", 22, y, { align: 'left' });   
-        doc.text("THAAN", 90, y, { align: 'center' });
-        doc.text("QUANTITY(M)", 120, y, { align: 'center' });
-        doc.text("RATE", 155, y, { align: 'right' });
-        doc.text("TOTAL", 188, y, { align: 'right' });
-
-
-        doc.setFont("times", "normal");
-        y += 5.5;
-        let subTotal = 0;
-        for (let i = 0; i < productData.length; i++) {
-            const total = productData[i]["price"] * productData[i]["price"];
-            doc.line(20, y + 1.5, 190, y + 1.5);
-            doc.text(productData[i]["name"], 22, y, { align: 'left' });   
-            doc.text(`${productData[i]["thn"]}`, 90, y, { align: 'center' });
-            doc.text(`${productData[i]["qty"]}`, 120, y, { align: 'center' });
-            doc.text(`${productData[i]["price"]}`, 155, y, { align: 'right' });
-            doc.text(`${numberWithComma(total)}`, 188, y, { align: 'right' });
-            y += 5.5;
-            subTotal += total;
-        }
-
-        y += 5.5;
-        doc.line(20, y + 1.5, 190, y + 1.5);
-        doc.text("Payment (-)", 22, y, { align: 'left' }); // Payment
-        doc.text(`${numberWithComma(invoice["payment"])}`, 188, y, { align: 'right' }); // Payment
-
-        y += 5.5;
-        doc.line(20, y + 1.5, 190, y + 1.5);
-        doc.text("Deduct (-)", 22, y, { align: 'left' }); // Deduct
-        doc.text(`${numberWithComma(invoice["deduct"])}`, 188, y, { align: 'right' }); // Deduct
-
-        y += 11;
-        doc.setFont("times", "bold");
-        const GTotal = subTotal - invoice["payment"] - invoice["deduct"];
-        doc.line(20, y + 1.5, 190, y + 1.5);
-        doc.text("Amount to pay", 22, y, { align: 'left' }); // Amount to pay
-        doc.text(`${numberWithComma(GTotal)}`, 188, y, { align: 'right' }); // Amount to pay     
-
-        y += 5.5;
-        doc.setFont("times", "normal");
-        const inword = inwordEnglish(GTotal);
-        const fullInword = `Inword: ${inword.charAt(0).toUpperCase() + inword.slice(1).toLowerCase()} only.`;
-
-        doc.text(fullInword, 22, y, { align: 'left' }); // Inword
-
-
-        doc.save("test.pdf")
+    const messageHandler = (data) => {
+        setMsg(data);
     }
 
+
+
+    const cmdPrint = async () => {
+        if (customerId === "" || invoices.length < 1) {
+            setNewMsg("Please select a customer or there is not enough data.");
+            return false;
+        }
+        
+        const printObject = [
+            invoice,
+            dt,
+            customerId,
+            payment,
+            deduct,
+            yr,
+            invoices
+        ]
+        const data = invoicePDFSchema(printObject);
+        console.log("aslam", data)
+        invoicePDFPrint(data, customers, products);
+    }
+
+
+
+    const cmdNew = () => {
+        localStorage.removeItem("invoiceNumber");
+        localStorage.removeItem("dt");
+        localStorage.removeItem("invoice");
+        setInvoiceNumber()
+        setMsg(Date.now())
+    }
+
+
+
+    const cmdExport = async (e) => {
+        e.preventDefault();
+        try {
+
+            if (customerId === "" || invoices.length < 1) {
+                setNewMsg("Please select a customer or there is not enough data.");
+                return false;
+            }
+
+            const exportedData = remoteInvoice.find(item => item.invoiceNo === Number(invoice));
+            if(exportedData){
+                setNewMsg("This invoice has been exported to the database.");
+                return false;
+            }
+      
+            const saveObject = [
+                invoice,
+                dt,
+                customerId,
+                payment,
+                deduct,
+                yr,
+                invoices
+            ]
+            const data = invoicePDFSchema(saveObject);
+            console.log("aslam", data)
+
+          const msg = await addDataToFirebase("invoice", data);
+            setNewMsg(msg);
+          cmdNew();
+        } catch (error) {
+            console.error("Error saving product data:", error);
+            setNewMsg("Error saving product data.");
+        }
+    }
 
 
 
 
     return (
         <>
-            <div className="w-full py-4">
-                <h1 className="w-full text-xl lg:text-3xl font-bold text-center text-blue-700">jsPDF</h1>
+            <div className="w-full mb-3 mt-8">
+                <h1 className="w-full text-xl lg:text-3xl font-bold text-center text-blue-700">Invoice</h1>
+                <p className="w-full text-center">Invoice Number: <strong>{invoice}</strong><br />Invoice Date: <strong>{dt}</strong></p>
+                <p className="w-full text-center text-blue-300">&nbsp;{waitMsg}&nbsp;</p>
             </div>
-            <button onClick={clickMe}>Click</button>
+
+
+            <div className="w-full bg-white border-2 border-gray-200 p-4 shadow-md rounded-md">
+                <div className="w-full overflow-auto">
+                    <p className="w-full text-sm text-center text-pink-600">&nbsp;{msg}&nbsp;</p>
+                    <p className="w-full text-sm text-center text-pink-600">&nbsp;{newMsg}&nbsp;</p>
+                    <div className="w-full flex justify-start">
+                        <div className="w-auto flex items-center space-x-4">
+                            <DropdownEn Title="Customer" Id="customerId" Change={e => setCustomerId(e.target.value)} Value={customerId}>
+                                {customers.length ? customers.map(customer => <option value={customer.id} key={customer.id}>{customer.name}-{customer.address}</option>) : null}
+                            </DropdownEn>
+                            <TextNum Title="Payment" Id="payment" Change={e => setPament(e.target.value)} Value={payment} />
+                            <TextNum Title="Deduct" Id="deduct" Change={e => setDeduct(e.target.value)} Value={deduct} />
+                            <BtnEn Title="Print" Click={cmdPrint} Class="bg-blue-600 hover:bg-blue-800 text-white" />
+                            <BtnEn Title="Export" Click={cmdExport} Class="bg-blue-600 hover:bg-blue-800 text-white" />
+                            <BtnEn Title="NewInvoice" Click={cmdNew} Class="bg-blue-600 hover:bg-blue-800 text-white" />
+
+                        </div>
+                    </div>
+                    <table className="w-full border border-gray-200">
+                        <thead>
+                            <tr className="w-full bg-gray-200">
+                                <th className="text-start border-b border-gray-200 px-4 py-2">Product</th>
+                                <th className="text-center border-b border-gray-200 px-4 py-2">Thn</th>
+                                <th className="text-center border-b border-gray-200 px-4 py-2">Qty</th>
+                                <th className="text-end border-b border-gray-200 px-4 py-2">Price</th>
+                                <th className="text-end border-b border-gray-200 px-4 py-2">Total</th>
+                                <th className="w-[100px] font-normal">
+                                    <div className="w-full flex justify-end items-center pr-2.5 font-normal">
+                                        <Add message={messageHandler} />
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                invoices.length ? invoices.map(invoice => {
+                                    return (
+                                        <tr className="border-b border-gray-200 hover:bg-gray-100" key={invoice.id}>
+                                            <td className="text-start py-2 px-4">{invoice.name}</td>
+                                            <td className="text-center py-2 px-4">{invoice.thn}</td>
+                                            <td className="text-center py-2 px-4">{invoice.qty}</td>
+                                            <td className="text-end py-2 px-4">{invoice.price}</td>
+                                            <td className="text-end py-2 px-4">{numberWithComma((invoice.qty * invoice.price))}</td>
+                                            <td className="flex justify-end items-center mt-1">
+                                                <Edit message={messageHandler} id={invoice.id} data={invoice} />
+                                                <Delete message={messageHandler} id={invoice.id} data={invoice} />
+                                            </td>
+                                        </tr>
+                                    )
+                                })
+                                    : null
+                            }
+
+                            <tr className="border-b border-gray-200 hover:bg-gray-100">
+                                <td className="text-start py-2 px-4"><strong>Total</strong></td>
+                                <td className="text-center py-2 px-4"></td>
+                                <td className="text-center py-2 px-4"></td>
+                                <td className="text-center py-2 px-4"></td>
+                                <td className="text-end py-2 px-4"><strong>{numberWithComma(subTotal)}</strong></td>
+                                <td className="flex justify-end items-center mt-1">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </>
     );
-
 };
 
 export default Invoice;
