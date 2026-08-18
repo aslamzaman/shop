@@ -29,16 +29,21 @@ const Purchasesale = () => {
                 const matchPurchases = purchases.filter(item => item.productId === product.id && item.yr === Number(year))
                 const totalPurchase = matchPurchases.reduce((t, c) => t + c.qty, 0);
                 const totalPurchaseTaka = matchPurchases.reduce((t, c) => t + (c.qty * c.price), 0);
+                const totalPurchaseShade = matchPurchases.reduce((t, c) => t + Number(c.shadeNo), 0);
 
                 const matchSales = sales.filter(item => item.productId === product.id && item.yr === Number(year))
                 const totalSale = matchSales.reduce((t, c) => t + c.qty, 0);
                 const totalSaleTaka = matchSales.reduce((t, c) => t + (c.qty * c.price), 0);
+                const totalSaleShade = matchSales.reduce((t, c) => t + Number(c.shadeNo), 0);
+
                 const productBalance = totalPurchase - totalSale
                 const takaBalance = totalPurchaseTaka - totalSaleTaka
+                const shadeBalance = totalPurchaseShade - totalSaleShade
                 return{
                     ...product,
                     productBalance,
-                    takaBalance
+                    takaBalance,
+                    shadeBalance
                 }
             })
             const sortedData = balanceByProduct.sort((a, b) => sortArray(a.name, b.name));
@@ -71,7 +76,8 @@ const Purchasesale = () => {
                         <tr className="w-full bg-gray-200">
                             <th className="text-start border-b border-gray-200 px-4 py-1">Product Name</th>
                             <th className="text-start border-b border-gray-200 px-4 py-1">Product Description</th>
-                            <th className="text-end border-b border-gray-200 px-4 py-1">Stock</th>
+                            <th className="text-end border-b border-gray-200 px-4 py-1">Thaan</th>
+                            <th className="text-end border-b border-gray-200 px-4 py-1">Meter</th>
                             <th className="text-end border-b border-gray-200 px-4 py-1">Total Taka</th>
                         </tr>
                     </thead>
@@ -81,6 +87,7 @@ const Purchasesale = () => {
                                 <tr className="border-b border-gray-200 hover:bg-gray-100" key={stock.id}>
                                     <td className="text-start py-1 px-4">{stock.name}</td>
                                     <td className="text-start py-1 px-4">{stock.description}</td>        
+                                    <td className="text-end py-1 px-4">{stock.shadeBalance}</td>
                                     <td className="text-end py-1 px-4">{numberWithCommaISO(stock.productBalance)}</td>
                                     <td className="text-end py-1 px-4">{numberWithCommaISO(stock.takaBalance)}</td>             
                                 </tr>

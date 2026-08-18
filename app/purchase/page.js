@@ -72,8 +72,8 @@ const Purchase = () => {
                             <th className="text-center border-b border-gray-200 px-4 py-1">Shipment</th>
                             <th className="text-start border-b border-gray-200 px-4 py-1">Vendor</th>
                             <th className="text-start border-b border-gray-200 px-4 py-1">Product</th>
-                            <th className="text-center border-b border-gray-200 px-4 py-1">Shade No</th>
-                            <th className="text-end border-b border-gray-200 px-4 py-1">Quantity</th>
+                            <th className="text-center border-b border-gray-200 px-4 py-1">Thaan</th>
+                            <th className="text-end border-b border-gray-200 px-4 py-1">Quantity(Meter)</th>
                             <th className="text-end border-b border-gray-200 px-4 py-1">Price</th>
                             <th className="text-end border-b border-gray-200 px-4 py-1">Total</th>
                             <th className="font-normal flex justify-end border-b border-gray-200 px-4 py-1">

@@ -53,6 +53,10 @@ const MenuData = [
             {
                 label: 'Invoice List',
                 url: '/invoice_list'
+            },
+            {
+                label: 'Customer Dues',
+                url: '/customerdues'
             }
         ]
     }

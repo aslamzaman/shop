@@ -111,9 +111,9 @@ const Add = ({ message }) => {
                                                 {products.length ? products.map(product => <option value={product.id} key={product.id}>{product.name}- {product.description}</option>) : null}
                                             </DropdownEn>
 
-                                            <TextNum Title="Shade No" Id="shadeNo" Change={e => setShadeNo(e.target.value)} Value={shadeNo} />
+                                            <TextNum Title="Thaan" Id="shadeNo" Change={e => setShadeNo(e.target.value)} Value={shadeNo} />
 
-                                            <TextNum Title="Quantity" Id="qty" Change={e => setQty(e.target.value)} Value={qty} />
+                                            <TextNum Title="Quantity(Meter)" Id="qty" Change={e => setQty(e.target.value)} Value={qty} />
                                             <TextNum Title="Price" Id="price" Change={e => setPrice(e.target.value)} Value={price} />
 
                                             <TextEnDisabled Title="Year" Id="yr" Change={e => setYr(e.target.value)} Value={yr} />
