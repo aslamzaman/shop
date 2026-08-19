@@ -8,56 +8,39 @@ import { sortArray } from "@/lib/utils";
 
 
 
-const Purchasesale = () => {
+const Customerdues = () => {
     const [customersData, setCustomersData] = useState([]);
 
     const loadData = async () => {
         const year = sessionStorage.getItem('y');
         try {
-            const [vendors, customers, products, purchases, sales, invoices] = await Promise.all([
-                getDataFromFirebase("vendor"),
+            const [customers, payments, sales] = await Promise.all([
                 getDataFromFirebase("customer"),
-                getDataFromFirebase("product"),
-                getDataFromFirebase("purchase"),
+                getDataFromFirebase("payment"),
                 getDataFromFirebase("sale"),
-                getDataFromFirebase("invoice")
             ]);
 
 
-        
+
             const balanceByCustomer = customers.map(customer => {
 
-                const matchInvoices = invoices.filter(item => item.customerId === customer.id)
+                const matchSales = sales.filter(item => item.customerId === customer.id && item.yr === Number(year));
+                const matchPayments = payments.filter(item => item.customerId === customer.id);
 
-                if (matchInvoices.length > 0) {
-                    const productData = matchInvoices.map(invoice => {
-                        const prductValue = invoice["products"];
-                        const invoiceTaka = prductValue.reduce((t, c) => t + (c.qty * c.price), 0);
-                        const balance = (invoiceTaka - invoice.payment - invoice.deduct);
-                        return balance
-                    }) 
+                const totalStale = matchSales.reduce((t, c) => t + (c.qty * c.price), 0);
+                const totalPayment = matchPayments.reduce((t, c) => t + c.amount, 0);
+                const balance = totalStale - totalPayment;
 
-                   const result = productData.reduce((t, c) => t + c, 0)
-                    return {
-                        ...customer,
-                        result
-                       
-                    }
-                } else {
-                    return {
-                        ...customer,
-                        result: 0
-                    }
+                return {
+                    ...customer,
+                    balance
                 }
-
-
             })
 
 
             const sortedData = balanceByCustomer.sort((a, b) => sortArray(a.name, b.name));
-            console.log("Aslam1", sortedData);
+            console.log(sortedData);
             setCustomersData(sortedData);
-
         } catch (error) {
             console.log(error);
         }
@@ -84,7 +67,7 @@ const Purchasesale = () => {
                             <th className="text-start border-b border-gray-200 px-4 py-1">Customer Name</th>
                             <th className="text-start border-b border-gray-200 px-4 py-1">Business Name</th>
                             <th className="text-start border-b border-gray-200 px-4 py-1">Address</th>
-                            <th className="text-start border-b border-gray-200 px-4 py-1">Mobile</th>
+                            <th className="text-center border-b border-gray-200 px-4 py-1">Mobile</th>
                             <th className="text-end border-b border-gray-200 px-4 py-1">Total Dues</th>
                         </tr>
                     </thead>
@@ -95,8 +78,8 @@ const Purchasesale = () => {
                                     <td className="text-start py-1 px-4">{customer.name}</td>
                                     <td className="text-start py-1 px-4">{customer.businessName}</td>
                                     <td className="text-start py-1 px-4">{customer.address}</td>
-                                    <td className="text-start py-1 px-4">{customer.mobile}</td>
-                                    <td className="text-end py-1 px-4">{numberWithCommaISO(customer.result)}</td>
+                                    <td className="text-center py-1 px-4">{customer.mobile}</td>
+                                    <td className="text-end py-1 px-4">{numberWithCommaISO(customer.balance)}</td>
                                 </tr>
                             ))
                         ) : null}
@@ -108,5 +91,5 @@ const Purchasesale = () => {
 
 };
 
-export default Purchasesale;
+export default Customerdues;
 
