@@ -5,6 +5,7 @@ import Edit from "@/components/payments/Edit";
 import Delete from "@/components/payments/Delete";
 import { getDataFromFirebase } from "@/lib/firebaseFunction";
 import { sortArray } from "@/lib/utils";
+import { numberWithCommaISO } from "@/lib/utils";
 
 
 
@@ -12,7 +13,7 @@ const Payment = () => {
     const [payments, setPayments] = useState([]);
     const [waitMsg, setWaitMsg] = useState("");
     const [msg, setMsg] = useState("Data ready");
-
+    const [headerMsg, setHeaderMsg] = useState("Data ready");
 
     useEffect(() => {
         const getData = async () => {
@@ -36,6 +37,14 @@ const Payment = () => {
                 console.log(sortedData);
                 setPayments(sortedData);
                 setWaitMsg('');
+
+                // Header summery ----------------------------------------------------------
+
+                const totalAmount = paymentByYear.reduce((t, c)=> t + Number(c.amount), 0);                
+                setHeaderMsg(`Amount = ${numberWithCommaISO(totalAmount)}`)
+
+
+
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
@@ -55,6 +64,7 @@ const Payment = () => {
         <>
             <div className="w-full py-4">
                 <h1 className="w-full text-xl lg:text-3xl font-bold text-center text-blue-700">Payments</h1>
+                <h1 className="w-full text-md font-bold text-center text-black">&nbsp;{headerMsg}&nbsp;</h1>
                 <p className="w-full text-center text-blue-300">&nbsp;{waitMsg}&nbsp;</p>
                 <p className="w-full text-sm text-center text-pink-600">&nbsp;{msg}&nbsp;</p>
             </div>

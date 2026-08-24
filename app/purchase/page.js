@@ -5,7 +5,7 @@ import Edit from "@/components/purchase/Edit";
 import Delete from "@/components/purchase/Delete";
 import { getDataFromFirebase } from "@/lib/firebaseFunction";
 import { sortArray } from "@/lib/utils";
-
+import { numberWithCommaISO } from "@/lib/utils";
 
 
 
@@ -13,6 +13,7 @@ const Purchase = () => {
     const [purchases, setPurchases] = useState([]);
     const [waitMsg, setWaitMsg] = useState("");
     const [msg, setMsg] = useState("Data ready");
+    const [headerMsg, setHeaderMsg] = useState("Data ready");
 
     useEffect(() => {
         const getData = async () => {
@@ -40,6 +41,18 @@ const Purchase = () => {
                 console.log(sortedData);
                 setPurchases(sortedData);
                 setWaitMsg('');
+
+
+                // Header summery ----------------------------------------------------------
+
+                const totalThaan = purchaseByYear.reduce((t, c)=> t + Number(c.shadeNo), 0);
+                const totalMeter = purchaseByYear.reduce((t, c)=> t + Number(c.qty), 0);
+                const totalAmount = purchaseByYear.reduce((t, c)=> t + Number(c.qty) * Number(c.price), 0);                
+                setHeaderMsg(`Thaan = ${numberWithCommaISO(totalThaan)} || Meter = ${numberWithCommaISO(totalMeter)} || Amount = ${numberWithCommaISO(totalAmount)}`)
+
+
+
+
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
@@ -57,6 +70,7 @@ const Purchase = () => {
         <>
             <div className="w-full py-4">
                 <h1 className="w-full text-xl lg:text-3xl font-bold text-center text-blue-700">Purchases</h1>
+                <h1 className="w-full text-md font-bold text-center text-black">&nbsp;{headerMsg}&nbsp;</h1>
                 <p className="w-full text-center text-blue-300">&nbsp;{waitMsg}&nbsp;</p>
                 <p className="w-full text-sm text-center text-pink-600">&nbsp;{msg}&nbsp;</p>
             </div>
