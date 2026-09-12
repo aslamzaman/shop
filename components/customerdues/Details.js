@@ -27,6 +27,7 @@ const Details = ({ message, id, data }) => {
         const sortPayment = matchPayments.sort((a, b) => sortArray(new Date(b.dt), new Date(a.dt)));
         
         setCustomers(data);
+        console.log(sortSale);
         setSales(sortSale);
         setPayments(sortPayment);
 
@@ -83,6 +84,7 @@ const Details = ({ message, id, data }) => {
                                         <tr className="w-full bg-gray-200">
                                             <th className="text-center border-b border-gray-200 px-4 py-1">SL</th>
                                             <th className="text-center border-b border-gray-200 px-4 py-1">Data</th>
+                                            <th className="text-center border-b border-gray-200 px-4 py-1">Product Name</th>
                                             <th className="text-center border-b border-gray-200 px-4 py-1">Thaan</th>
                                             <th className="text-center border-b border-gray-200 px-4 py-1">Meter</th>
                                             <th className="text-center border-b border-gray-200 px-4 py-1">Price</th>
@@ -95,6 +97,7 @@ const Details = ({ message, id, data }) => {
                                                 <tr className="border-b border-gray-200 hover:bg-gray-100" key={sale.id}>
                                                     <td className="text-center py-1 px-4">{i+1}.</td>
                                                     <td className="text-center py-1 px-4">{sale.dt}</td>
+                                                    <td className="text-center py-1 px-4">{sale.product_name}</td>
                                                     <td className="text-center py-1 px-4">{sale.shadeNo}</td>
                                                     <td className="text-center py-1 px-4">{sale.qty}</td>
                                                     <td className="text-center py-1 px-4">{sale.price}</td>

@@ -16,16 +16,25 @@ const Customerdues = () => {
     const loadData = async () => {
         const year = sessionStorage.getItem('y');
         try {
-            const [customers, payments, sales] = await Promise.all([
+            const [customers, payments, sales, products] = await Promise.all([
                 getDataFromFirebase("customer"),
                 getDataFromFirebase("payment"),
                 getDataFromFirebase("sale"),
+                getDataFromFirebase("product"),
             ]);
 
 
             const balanceByCustomer = customers.map(customer => {
 
-                const matchSales = sales.filter(item => item.customerId === customer.id && item.yr === Number(year));
+                const filterSales = sales.filter(item => item.customerId === customer.id && item.yr === Number(year));
+                const matchSales = filterSales.map(item => {
+                    const product_name = products.find(p => p.id === item.productId)
+                    return{
+                        ...item,
+                        product_name: product_name ? product_name.name: "" 
+                    }
+                })
+                console.log(matchSales)
                 const matchPayments = payments.filter(item => item.customerId === customer.id);
 
                 const totalStale = matchSales.reduce((t, c) => t + (c.qty * c.price), 0);
