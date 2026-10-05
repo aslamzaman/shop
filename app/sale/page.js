@@ -1,18 +1,24 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { BtnEn, DropdownEn } from "@/components/Form";
 import Add from "@/components/sale/Add";
 import Edit from "@/components/sale/Edit";
 import Delete from "@/components/sale/Delete";
 import { getDataFromFirebase } from "@/lib/firebaseFunction";
-import { sortArray } from "@/lib/utils";
-import { numberWithCommaISO } from "@/lib/utils";
+import { sortArray, numberWithCommaISO, unique } from "@/lib/utils";
+
 
 
 const Sale = () => {
+    const [salesMain, setSalesMain] = useState([]);
     const [sales, setSales] = useState([]);
     const [waitMsg, setWaitMsg] = useState("");
     const [msg, setMsg] = useState("Data ready");
     const [headerMsg, setHeaderMsg] = useState("Data ready");
+
+    const [customerId, setCustomerId] = useState('');
+    const [customers, setCustomers] = useState([]);
+
 
 
     useEffect(() => {
@@ -31,6 +37,7 @@ const Sale = () => {
                     return {
                         ...sale,
                         customer: matchCustomer ? matchCustomer.name : '',
+                        customerId: matchCustomer ? matchCustomer.id : '',
                         product: matchProduct ? matchProduct.name : ''
                     }
                 })
@@ -39,15 +46,21 @@ const Sale = () => {
                 console.log(saleByYear)
                 const sortedData = saleByYear.sort((a, b) => sortArray(new Date(b.dt), new Date(a.dt)));
                 console.log(sortedData);
+
+                const sortedCustomer = customerResponse.sort((a, b) => sortArray(a.name, b.name));
+                console.log("aslam3", sortedCustomer)
+                setCustomers(sortedCustomer);
+
                 setSales(sortedData);
+                setSalesMain(sortedData);
                 setWaitMsg('');
-                
+
                 // Header summery ----------------------------------------------------------
 
 
-                const totalThaan = saleByYear.reduce((t, c)=> t + Number(c.shadeNo), 0);
-                const totalMeter = saleByYear.reduce((t, c)=> t + Number(c.qty), 0);
-                const totalAmount = saleByYear.reduce((t, c)=> t + Number(c.qty) * Number(c.price), 0);                
+                const totalThaan = saleByYear.reduce((t, c) => t + Number(c.shadeNo), 0);
+                const totalMeter = saleByYear.reduce((t, c) => t + Number(c.qty), 0);
+                const totalAmount = saleByYear.reduce((t, c) => t + Number(c.qty) * Number(c.price), 0);
                 setHeaderMsg(`Thaan = ${numberWithCommaISO(totalThaan)} || Meter = ${numberWithCommaISO(totalMeter)} || Amount = ${numberWithCommaISO(totalAmount)}`)
 
 
@@ -61,6 +74,27 @@ const Sale = () => {
 
     const messageHandler = (data) => {
         setMsg(data);
+    }
+
+
+
+    const searchClick = async () => {
+        try {
+            const searchData = salesMain.filter(data => data.customerId === customerId);
+            console.log(searchData);
+            setSales(searchData)
+
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const refreshClick = async () => {
+        try {
+            setSales(salesMain)
+        } catch (error) {
+            console.log(error);
+        }
     }
 
 
@@ -79,9 +113,21 @@ const Sale = () => {
 
 
             <div className="w-full p-4 mt-8 bg-white border-2 border-gray-300 shadow-md rounded-md overflow-auto">
+                <div className="w-full flex items-center space-x-4">
+                    <div>
+                        <DropdownEn Title="Customer" Id="customerId" Change={e => setCustomerId(e.target.value)} Value={customerId}>
+                            {customers.length ? customers.map(customer => <option value={customer.id} key={customer.id}>{customer.name}-{customer.address}</option>) : null}
+                        </DropdownEn>
+                    </div>
+                    <div className="w-full flex items-center space-x-4">
+                        <BtnEn Title="Search" Click={searchClick} Class="bg-blue-600 hover:bg-blue-800 text-white" />
+                        <BtnEn Title="Refresh" Click={refreshClick} Class="bg-green-600 hover:bg-green-800 text-white" />
+
+                    </div>
+                </div>
                 <table className="w-full border border-gray-200">
                     <thead>
-                        <tr className="w-full bg-gray-200">                           
+                        <tr className="w-full bg-gray-200">
                             <th className="text-center border-b border-gray-200 px-4 py-1">Date</th>
                             <th className="text-start border-b border-gray-200 px-4 py-1">Customer</th>
                             <th className="text-start border-b border-gray-200 px-4 py-1">Product</th>
@@ -95,7 +141,7 @@ const Sale = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {sales.length ? (                            
+                        {sales.length ? (
                             sales.map(sale => (
                                 <tr className="border-b border-gray-200 hover:bg-gray-100" key={sale.id}>
                                     <td className="text-center py-1 px-4">{sale.dt}</td>
@@ -106,14 +152,14 @@ const Sale = () => {
                                     <td className="text-end py-1 px-4">{(sale.price).toFixed(2)}</td>
                                     <td className="text-end py-1 px-4">
                                         {
-                                        (sale.qty * sale.price).toFixed(2)
+                                            (sale.qty * sale.price).toFixed(2)
                                         }
                                     </td>
-                                    <td className="text-center py-2">                                 
+                                    <td className="text-center py-2">
                                         <div className="h-8 flex justify-end items-center space-x-1 mt-1 mr-2">
                                             <Edit message={messageHandler} id={sale.id} data={sale} />
                                             <Delete message={messageHandler} id={sale.id} data={sale} />
-                                        </div>                                     
+                                        </div>
                                     </td>
                                 </tr>
                             ))
